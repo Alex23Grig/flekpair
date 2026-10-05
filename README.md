@@ -16,7 +16,7 @@
 ---
 
 [![Build iloader](https://img.shields.io/github/actions/workflow/status/nab138/iloader/build.yml?style=flat&logo=github&logoColor=white&label=Build%20iloader)](https://github.com/nab138/iloader/actions/workflows/build.yml) ![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2Fnab138%2F28258aff7e3f1d3a3084a21f4cff2e57%2Fraw%2Filoader_downloads.json&style=flat)
-[![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/claration)
+[![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/nab138)
 
 Install SideStore (or other apps) and import your pairing file with ease
 
@@ -32,6 +32,8 @@ Install SideStore (or other apps) and import your pairing file with ease
   - Linux: Potentially included, if not, install via your package manager
 - Install the latest version for your platform from the [releases](https://github.com/nab138/iloader/releases)
   - NixOS: Use the flake `github:nab138/iloader`
+  - Fedora: Use the .RPM or the unofficial [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/anudeepd/iloader)
+  - Arch: Use the unofficial [AUR package](https://aur.archlinux.org/packages/iloader-bin),
 - Plug in your iDevice to your computer
 - Open the app
 - Sign into your Apple ID
@@ -150,13 +152,4 @@ Please read our [Contributing](/CONTRIBUTING.md) policy before making a contribu
 
 ## Future Plans
 
-- Checks for if device is in developer mode, has password set, etc
-- Automatic anisette fallback
-- Team selection when an account has multiple teams
-- Auto-refresh installed apps
-  - Minimize to tray
-  - Detect installed apps
-  - Refresh apps automatically
-- Set a "default" account to automatically log into
-- Import SideStore account info automatically
-- Mount DDI and open sidestore after installation
+iloader is currently being overhauled, see the [trello board](https://trello.com/b/hAe1LHTj/iloader) for more info!
