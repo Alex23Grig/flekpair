@@ -16,6 +16,7 @@
 ---
 
 [![Build iloader](https://img.shields.io/github/actions/workflow/status/nab138/iloader/build.yml?style=flat&logo=github&logoColor=white&label=Build%20iloader)](https://github.com/nab138/iloader/actions/workflows/build.yml) ![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2Fnab138%2F28258aff7e3f1d3a3084a21f4cff2e57%2Fraw%2Filoader_downloads.json&style=flat)
+[![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/claration)
 
 Install SideStore (or other apps) and import your pairing file with ease
 
@@ -131,6 +132,7 @@ Thank you to everyone who has contributed translations! See the [Translating](#t
 - [ShadowWLX](https://github.com/ShadowWLX): Improved French (fr)
 - [fkpcomposer](https://github.com/fkpcomposer): Brazilian Portuguese (pt_br)
 - [474FrediFred](https://github.com/474FrediFred): Swiss German (de_ch)
+- [bovae](https://github.com/bovae) & [b1twalker](https://github.com/b1twalker): Ukranian (uk)
 
 ## License
 
