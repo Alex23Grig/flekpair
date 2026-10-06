@@ -1,16 +1,12 @@
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { useTranslation } from "react-i18next";
 import logo from "../app-icon.svg";
-import {
-  AppError,
-  getErrorSuggestions,
-  parseLinkToken,
-  toAppError,
-} from "./errors";
+import { AppleDriver } from "./AppleDriver";
+import { AppError, getErrorSuggestions, platform, toAppError } from "./errors";
+import { ExternalLink, Suggestions } from "./Suggestions";
 
 type DeviceInfo = {
   udid: string;
@@ -44,43 +40,6 @@ const osName = (deviceClass: string) => {
   if (deviceClass === "Watch") return "watchOS";
   return "iOS";
 };
-
-const ExternalLink = ({
-  url,
-  children,
-}: {
-  url: string;
-  children: ReactNode;
-}) => (
-  <a
-    href={url}
-    onClick={(event) => {
-      event.preventDefault();
-      openUrl(url).catch((e) => console.error("Failed to open link", e));
-    }}
-  >
-    {children}
-  </a>
-);
-
-const Suggestions = ({ items }: { items: string[] }) => (
-  <ul className="suggestions">
-    {items.map((suggestion) => (
-      <li key={suggestion}>
-        {suggestion.split(/(\(\(link:[^)]+\)\))/g).map((part, index) => {
-          const link = parseLinkToken(part);
-          return link ? (
-            <ExternalLink key={index} url={link.url}>
-              {link.text}
-            </ExternalLink>
-          ) : (
-            <span key={index}>{part}</span>
-          );
-        })}
-      </li>
-    ))}
-  </ul>
-);
 
 const DeviceGlyph = ({ tablet }: { tablet: boolean }) => (
   <svg
@@ -248,7 +207,9 @@ function App() {
       </header>
 
       <section className="device" aria-live="polite">
-        {devicesError ? (
+        {devicesError?.type === "usbmuxd" && platform === "windows" ? (
+          <AppleDriver error={devicesError} />
+        ) : devicesError ? (
           <>
             <p className="device-empty-title">
               {t("device.unable_load_devices_prefix")}

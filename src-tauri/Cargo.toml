@@ -33,5 +33,14 @@ plist-macro = "0.1.6"
 thiserror = "2.0.18"
 uuid = { version = "1", features = ["v4"] }
 
+# Fetching Apple's device driver, which only Windows lacks. The tests cover it on any platform.
+[target.'cfg(windows)'.dependencies]
+reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "system-proxy"] }
+cab = "0.6.0"
+
+[dev-dependencies]
+reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "system-proxy"] }
+cab = "0.6.0"
+
 [profile.release]
 strip = true

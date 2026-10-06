@@ -1,8 +1,13 @@
+mod apple_driver;
 mod device;
 mod error;
 mod pairing;
 
 use crate::{
+    apple_driver::{
+        DriverSetup, apple_driver_progress, apple_driver_state, cancel_apple_driver,
+        install_apple_driver,
+    },
     device::{DeviceCache, list_devices},
     pairing::{
         LastExport, PairingCancelToken, RemotePairings, cancel_pairing, export_pairing_file,
@@ -20,11 +25,16 @@ pub fn run() {
         .manage(PairingCancelToken::default())
         .manage(RemotePairings::default())
         .manage(LastExport::default())
+        .manage(DriverSetup::default())
         .invoke_handler(tauri::generate_handler![
             list_devices,
             export_pairing_file,
             cancel_pairing,
             reveal_pairing_file,
+            apple_driver_state,
+            apple_driver_progress,
+            install_apple_driver,
+            cancel_apple_driver,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

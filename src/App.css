@@ -211,6 +211,75 @@ button.device-udid:hover {
   font-weight: 600;
 }
 
+.device-empty-title.failure {
+  color: var(--danger);
+}
+
+.driver-body {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.driver-alternative {
+  margin-top: 0.25rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.87rem;
+  color: var(--text-muted);
+}
+
+.driver-stage {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 600;
+}
+
+.driver-download {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 1.7rem;
+  font-size: 0.87rem;
+  color: var(--text-muted);
+}
+
+.driver-download .text-button {
+  margin-inline-end: -0.7rem;
+}
+
+.meter {
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: var(--inset);
+  overflow: hidden;
+}
+
+.meter > div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-end));
+  transition: width 0.3s ease;
+}
+
+.card-button {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.5rem 0.95rem;
+  border: none;
+  border-radius: 0.7rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  transition: filter 0.15s ease;
+}
+
+.card-button:hover {
+  filter: brightness(1.1);
+}
+
 .suggestions {
   padding-inline-start: 1.15rem;
   font-size: 0.87rem;
@@ -289,6 +358,11 @@ button:disabled {
   border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: #fff;
   animation: spin 0.8s linear infinite;
+}
+
+.spinner.muted {
+  border-color: var(--inset);
+  border-top-color: var(--text-muted);
 }
 
 @keyframes spin {
