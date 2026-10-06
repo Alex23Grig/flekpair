@@ -1,155 +1,78 @@
-<a href="https://iloader.app">
-  <picture align="left" >
-    <source media="(prefers-color-scheme: dark)" srcset="/iloader.svg">
-    <img align="left" width="90" height="90" src="/iloader-dark.svg">
-  </picture>
-  
-  <div id="user-content-toc">
-    <ul style="list-style: none;">
-      <summary>
-        <h1>iloader</h1>
-      </summary>
-    </ul>
-  </div>
-</a>
+<img align="left" width="90" height="90" src="/app-icon.svg" alt="">
+
+# FlekPair
+
+One-click pairing file exporter for iPhone and iPad, on macOS and Windows.
 
 ---
 
-[![Build iloader](https://img.shields.io/github/actions/workflow/status/nab138/iloader/build.yml?style=flat&logo=github&logoColor=white&label=Build%20iloader)](https://github.com/nab138/iloader/actions/workflows/build.yml) ![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2Fnab138%2F28258aff7e3f1d3a3084a21f4cff2e57%2Fraw%2Filoader_downloads.json&style=flat)
-[![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/nab138)
+Plug in your device, click **Export Pairing File**, and FlekPair saves `pairingFile.plist` to your Downloads folder and shows it to you. That is the whole app.
 
-Install SideStore (or other apps) and import your pairing file with ease
-
-**This repository and [iloader.app](https://iloader.app) are the only official ways to download iloader. There is also an unofficial [Homebrew cask](https://formulae.brew.sh/cask/iloader), an unofficial [AUR package](https://aur.archlinux.org/packages/iloader-bin), and an unofficial [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/anudeepd/iloader) maintained by the community. Do not download from any other sources or websites.**
-
-<img width="1918" height="998" alt="iloader0" src="https://github.com/user-attachments/assets/93cd135d-6d89-46ee-9b9f-12c596806911" />
+FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) with everything except pairing-file export removed. It is not affiliated with or endorsed by iloader or its author.
 
 ## How to use
 
-- Install usbmuxd for your platform
-  - Windows: [iTunes](https://apple.co/ms)
-  - macOS: Included
-  - Linux: Potentially included, if not, install via your package manager
-- Install the latest version for your platform from the [releases](https://github.com/nab138/iloader/releases)
-  - NixOS: Use the flake `github:nab138/iloader`
-  - Fedora: Use the .RPM or the unofficial [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/anudeepd/iloader)
-  - Arch: Use the unofficial [AUR package](https://aur.archlinux.org/packages/iloader-bin),
-- Plug in your iDevice to your computer
-- Open the app
-- Sign into your Apple ID
-- Select your action (e.g. install SideStore)
+1. **Windows only:** install [iTunes](https://apple.co/ms) or "Apple Devices" from the Microsoft Store, so the computer can talk to the device. macOS needs nothing extra.
+2. Connect your iPhone or iPad with a USB cable and unlock it. The device must have a passcode set.
+3. Open FlekPair and click **Export Pairing File**.
+4. If the device asks, tap **Trust** and enter your passcode.
 
-## Features
+The file lands in your Downloads folder as `pairingFile.plist` and is selected in Finder or Explorer. An existing file is never replaced: a second one is saved as `pairingFile (1).plist`.
 
-- Install SideStore (or LiveContainer + SideStore), import certificate and place rppairing+lockdown pairing files automatically
-- Import any IPA
-- Intelligent error suggestions to help resolve common issues
-- Manage pairing files in apps like StikDebug, SideStore, Protokolle, etc
-- See and revoke development certificates & app ids
+Only devices connected by cable are listed. With more than one connected, pick the device from the list above the button.
+
+### Good to know
+
+- macOS may ask once whether FlekPair can access your Downloads folder. If you decline, the file is saved to FlekPair's own data folder instead and shown there.
+- Builds are not notarized by Apple or signed for Windows unless you add signing secrets (see [Releasing](#releasing)). On macOS, open the app once through **System Settings → Privacy & Security → Open Anyway**; on Windows, choose **More info → Run anyway**.
+- The interface follows the system language where a full translation exists (18 languages inherited from iloader) and is English otherwise.
+
+## What is in the file
+
+The same combined pairing file iloader exports, for apps that ask for one, such as SideStore, StikDebug and LiveContainer:
+
+- this computer's lockdown pairing record for the device, and
+- on iOS 17.4 and later, a remote pairing (RPPairing) record created for this export.
+
+Exporting also turns on Wi-Fi debugging on the device (`EnableWifiDebugging`), as iloader does, which those apps rely on.
+
+**Treat the file like a password.** Whoever holds it can connect to your device. On macOS and Linux it is written readable by your user only.
 
 ## Troubleshooting
 
-- If you are unable to solve an issue on your own, copy the full error message and ask on the [idevice Discord server](https://discord.gg/EA6yVgydBz) or [open an issue](https://github.com/nab138/iloader/issues).
-- You can view app logs with the "View Logs." If nothing is showing up, change the log level to "Debug."
-- If those logs aren't helpful, logs with additional are stored in the following locations:
-  - Windows: `%APPDATA%\me.nabdev.iloader\logs`
-  - macOS: `~/Library/Application Support/me.nabdev.iloader/logs`
-  - Linux: `~/.local/share/me.nabdev.iloader/logs/`
+The app lists suggestions next to any error, and **Copy to clipboard** copies the technical message.
 
-## Translating
-
-iloader needs localization! If you speak another language and notice iloader does not support it or has mistakes, please consider contributing.
-
-To update/edit an existing language, make a PR modifying `src/locales/<lang>.json`.
-
-To add a new language, add your language to `src/i18next.ts`, and in `src/locales` copy `en.json` to a new file titled `<langcode>.json` and update the strings.
-
-**i18next.ts:**
-
-```ts
-const languages = [
-  ["en", "English"],
-  ["es", "Español"],
-  // Your language here...
-] as const;
-```
-
-You can also add your name to the translators section of the README.
-
-Thank you for translating!
+For more detail, start FlekPair from a terminal with `FLEKPAIR_LOG=debug` to print the device conversation to stderr. That output includes key material, so don't post it publicly.
 
 ## Building from source
 
-1. Install [bun](https://bun.sh) (or [Node.js](https://nodejs.org)) and [Rust](https://www.rust-lang.org/tools/install)
+1. Install [Node.js](https://nodejs.org) and [Rust](https://www.rust-lang.org/tools/install)
 2. Clone the repository and `cd` into it
-3. Run `bun i` (or `npm i`)
+3. Run `npm install`
 
-For development with hot reload: `bun tauri dev` (or `npm run tauri dev`)
-Make a production build: `bun tauri build` (or `npm run tauri build`)
+For development with hot reload: `npm run tauri dev`
+Make a production build: `npm run tauri build`
+
+To work on the interface without a device, run `npm run dev` and open <http://localhost:1420> in a browser. A stand-in backend takes over there; choose what it simulates with `?mock=device`, `two`, `none`, `unnamed`, `error`, `denied`, `nousbmuxd` or `stuck`, and the language with `&lng=ru`.
+
+The app icon is generated from `app-icon.svg`: `npm run tauri icon app-icon.svg`.
+
+## Releasing
+
+Every push to `main` and every pull request builds a universal macOS `.dmg` and a Windows installer, downloadable from the workflow run. Publishing a GitHub release attaches them to that release.
+
+macOS builds are signed with a Developer ID and notarized when these repository secrets exist: `DEV_ID_P12_BASE64`, `DEV_ID_P12_PASSWORD`, `DEV_IDENTITY_NAME`, `NOTARIZE_APPLE_ID`, `NOTARIZE_APP_SPECIFIC_PASS` and `NOTARIZE_TEAM_ID`. Without them the app is ad-hoc signed.
 
 ## Credits
 
-- Icon made by [Transistor](https://github.com/transistor-exe)
-- UI improved by [StephenDev0](https://github.com/StephenDev0)
+- [iloader](https://github.com/nab138/iloader) by [nab138](https://github.com/nab138), which FlekPair is cut down from. If FlekPair is useful to you, consider [sponsoring nab138](https://github.com/sponsors/nab138).
 - [idevice](https://github.com/jkcoxson/idevice) by [jkcoxson](https://github.com/jkcoxson) for communicating with iOS devices
-- [isideload](https://github.com/nab138/isideload) for installing apps
-  - [idevice](https://github.com/jkcoxson/idevice) by [jkcoxson](https://github.com/jkcoxson) crate is used to communicate with the device
-  - [apple-codesign-quick](https://github.com/Dadoum/apple-codesign-quick) by [Dadoum](https://github.com/Dadoum) for codesigning and entitlements
-  - [Impactor](https://github.com/claration/Impactor) by [claration](https://github.com/claration) was used as a reference for cryptography operations (converting certs to p12, etc.).
-  - [Sideloader](https://github.com/Dadoum/Sideloader) by [Dadoum](https://github.com/Dadoum) was used as a reference for how apple private developer endpoints work
 - [idevice_pair](https://github.com/jkcoxson/idevice_pair) was used as a reference for pairing file management
+- The [translators of iloader](https://github.com/nab138/iloader#translators), whose work the interface text comes from
 - App made with [tauri](https://tauri.app)
-
-## Translators
-
-Thank you to everyone who has contributed translations! See the [Translating](#translating) section if you would like to contribute as well.
-
-- [By3lish](https://github.com/by3lish): Azerbaijani (az)
-- [TNT-333](https://github.com/TNT-333): German (de)
-- [basketshoe](https://github.com/basketshoe): Italian (it)
-- [baocreata](https://github.com/baocreata): Vietnamese (vt)
-- [IamArayel](https://github.com/IamArayel): French (fr)
-- [kkula9999](https://github.com/kkula9999): Traditional & Simplified Chinese (zh_tw & zh_cn)
-- [sibwaze](https://github.com/sibwaze): Russian (ru)
-- [notmalicik](https://github.com/notmalicik): Română (ro)
-- [mirdukkkkk](https://github.com/mirdukkkkk): Improved Russian (ru)
-- [okinaau](https://github.com/okinaau): Arabic (ar)
-- [ChouChiu](https://github.com/ChouChiu): Cantonese (zh_hk) & Improved Chinese (zh_tw & zh_cn)
-- [marcinmajsc](https://github.com/marcinmajsc): Polish (pl)
-- [ern775](https://github.com/ern775): Turkish (tr)
-- [canpng](https://github.com/canpng): Improved Turkish (tr)
-- [jazoppix](https://github.com/jazoppix): Spanish (es)
-- [eseiker](https://github.com/eseiker): Korean (ko)
-- [seomin0610](https://github.com/seomin0610): Improved Korean (ko)
-- [Ordyan777](https://github.com/Ordyan777): Armenian (am)
-- [kakik0u](https://github.com/kakik0u): Japanese (ja)
-- [lkspodmol](https://github.com/lkspodmol): Czech (cs_cz)
-- [marcusherelammonstyle-cmd](https://github.com/marcusherelammonstyle-cmd): Swedish (sv)
-- [MCI49312](https://github.com/MCI49312): Hungarian (hu)
-- [Kynonim](https://github.com/Kynonim): Indonesian (id)
-- [DD00031](https://github.com/DD00031): Dutch (nl)
-- [Toritan123](https://github.com/Toritan123): Improved Japanese (ja)
-- [marcinmajsc](https://github.com/marcinmajsc): Improved Polish (pl)
-- [dleiferives](https://github.com/dleiferives): Greek (el)
-- [ShadowWLX](https://github.com/ShadowWLX): Improved French (fr)
-- [fkpcomposer](https://github.com/fkpcomposer): Brazilian Portuguese (pt_br)
-- [474FrediFred](https://github.com/474FrediFred): Swiss German (de_ch)
-- [bovae](https://github.com/bovae) & [b1twalker](https://github.com/b1twalker): Ukranian (uk)
 
 ## License
 
-Copyright (C) 2026 nab138
-
 The source code of this repository is licensed under the MIT License. See the [LICENSE](/LICENSE) file for the full text.
 
-Branding, logos, media assets, and the name “iloader” are not licensed under the MIT License and are subject to separate restrictions.
-
-You may retain or use branding materials in forks, tutorials, or documentation if you include a clear link to either the official site (https://iloader.app) or the iloader source code repository (https://github.com/nab138/iloader) and do not imply official endorsement. See [LICENSE-BRANDING](/LICENSE-BRANDING) for full details.
-
-## Contributing
-
-Please read our [Contributing](/CONTRIBUTING.md) policy before making a contribution.
-
-## Future Plans
-
-iloader is currently being overhauled, see the [trello board](https://trello.com/b/hAe1LHTj/iloader) for more info!
+The name "iloader" and its logo belong to nab138 and are covered by iloader's own [branding notice](https://github.com/nab138/iloader/blob/main/LICENSE-BRANDING). They are not part of FlekPair, which names iloader only to credit it.
