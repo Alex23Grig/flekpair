@@ -22,6 +22,7 @@
   "app": {
     "language": "Language",
     "github": "GitHub",
+    "donate": "Donate",
     "open_github_failed": "Unable to open GitHub link",
     "section_account": "Account",
     "section_placeholder": "Placeholder",
