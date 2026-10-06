@@ -2,41 +2,6 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-const languages = [
-  ["az", "Azərbaycan"],
-  ["en", "English"],
-  ["el", "Ελληνικά"],
-  ["am", "Հայերեն"],
-  ["es", "Español"],
-  ["it", "Italiano"],
-  ["de", "Deutsch"],
-  ["de_ch", "Schweizerdeutsch"],
-  ["fr", "Français"],
-  ["pl", "Polski"],
-  ["nl", "Nederlands"],
-  ["vi", "Tiếng Việt"],
-  ["ru", "Русский"],
-  ["uk", "Українська"],
-  ["ro", "Română"],
-  ["ar", "العربية"],
-  ["tr", "Türkçe"],
-  ["zh_tw", "Traditional Chinese （繁體中文)"],
-  ["zh_cn", "Simplified Chinese （简体中文)"],
-  ["ko", "한국어"],
-  ["zh_hk", "Cantonese （粵語)"],
-  ["ja", "日本語"],
-  ["cs_cz", "Čeština"],
-  ["sv", "Svenska"],
-  ["hu", "Magyar"],
-  ["kh", "ភាសាខ្មែរ"],
-  ["id", "Bahasa Indonesia"],
-  ["pt_br", "Português (Brasileiro)"]
-] as const;
-
-export const sortedLanguages = [...languages].sort((a, b) =>
-  a[0].localeCompare(b[0]),
-);
-
 type TranslationResource = Record<string, unknown>;
 
 const localeModules = import.meta.glob<{ default: TranslationResource }>(
@@ -55,6 +20,19 @@ const resources = Object.fromEntries(
   }),
 );
 
+// Locale files keep iloader's names, which aren't always what the system reports.
+const localeAliases: Record<string, string> = {
+  "de-ch": "de_ch",
+  pt: "pt_br",
+  km: "kh",
+};
+
+const toLocale = (detected: string) => {
+  const tag = detected.toLowerCase().replace(/_/g, "-");
+  const language = tag.split("-")[0];
+  return localeAliases[tag] ?? localeAliases[language] ?? language;
+};
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -64,6 +42,15 @@ i18n
       escapeValue: false,
     },
     resources,
+    // There is no language picker: follow the system (or ?lng= while developing).
+    detection: {
+      order: ["querystring", "navigator"],
+      caches: [],
+      convertDetectedLanguage: toLocale,
+    },
   });
+
+document.documentElement.lang = i18n.resolvedLanguage ?? "en";
+document.documentElement.dir = i18n.dir();
 
 export default i18n;
