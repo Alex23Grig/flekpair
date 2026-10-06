@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tile" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#7ba3cc"/>
+      <stop offset="1" stop-color="#4a3f93"/>
+    </linearGradient>
+    <linearGradient id="glass" gradientUnits="userSpaceOnUse" x1="0" y1="206.1" x2="0" y2="798.2">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0.3" stop-color="#fbfcff"/>
+      <stop offset="1" stop-color="#c9cee6"/>
+    </linearGradient>
+    <filter id="frost" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="13" result="spread"/>
+      <feFlood flood-color="#161442" flood-opacity="0.3"/>
+      <feComposite in2="spread" operator="in" result="halo"/>
+      <feMorphology in="SourceAlpha" operator="erode" radius="6" result="core"/>
+      <feGaussianBlur in="core" stdDeviation="9" result="softCore"/>
+      <feComposite in="SourceAlpha" in2="softCore" operator="out" result="edge"/>
+      <feFlood flood-color="#fff" flood-opacity="0.85"/>
+      <feComposite in2="edge" operator="in" result="rim"/>
+      <feMerge>
+        <feMergeNode in="halo"/>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="rim"/>
+      </feMerge>
+    </filter>
+    <clipPath id="linkFront"><polygon points="-982 1916.1 2255.1 -1321 636.5 -2939.6 -2600.6 297.5"/></clipPath>
+    <clipPath id="linkBehind"><polygon points="-982 1916.1 2255.1 -1321 3873.7 297.5 636.5 3534.7"/></clipPath>
+    <path id="shackle" d="M348 544.9 L348 422.8 A163.3 163.3 0 0 1 674.5 422.8 L674.5 456.4 A22.9 22.9 0 0 1 651.6 479.3 L627.6 479.3 A22.9 22.9 0 0 1 604.7 456.4 L604.7 422.8 A93.5 93.5 0 0 0 417.8 422.8 L417.8 544.9 Z"/>
+    <path id="link" fill-rule="evenodd" d="M527.6 291.1 L630.1 188.5 A81.6 81.6 0 0 1 745.5 304 L643 406.5 A81.6 81.6 0 0 1 527.6 291.1 Z M563.2 326.7 L665.7 224.2 A31.3 31.3 0 0 1 709.9 268.4 L607.4 370.9 A31.3 31.3 0 0 1 563.2 326.7 Z"/>
+    <mask id="underLink" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <use href="#link" clip-path="url(#linkFront)" stroke="#000" stroke-width="29"/>
+    </mask>
+    <mask id="underShackle" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <use href="#shackle" clip-path="url(#linkBehind)" stroke="#000" stroke-width="29"/>
+    </mask>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#tile)"/>
+  <g filter="url(#frost)" fill="url(#glass)">
+    <path fill-rule="evenodd" d="M364.4 522 H658.1 A61 61 0 0 1 719.2 583.1 V737.2 A61 61 0 0 1 658.1 798.2 H364.4 A61 61 0 0 1 303.3 737.2 V583.1 A61 61 0 0 1 364.4 522 Z M465.5 659 A45.8 45.8 0 1 0 557 659 A45.8 45.8 0 1 0 465.5 659 Z"/>
+    <use href="#shackle" mask="url(#underLink)"/>
+    <use href="#link" mask="url(#underShackle)"/>
+  </g>
+</svg>

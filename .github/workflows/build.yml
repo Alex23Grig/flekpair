@@ -1,12 +1,10 @@
-name: "Build iloader"
+name: "Build FlekPair"
 
 on:
   push:
     branches:
-      - "*"
+      - main
   pull_request:
-    branches:
-      - "*"
   workflow_dispatch:
   release:
     types: [published]
@@ -22,76 +20,46 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "ubuntu-22.04"
-            args: "--bundles deb"
-          - platform: "ubuntu-22.04"
-            args: "--bundles rpm"
-          - platform: "ubuntu-22.04"
-            args: "--bundles appimage"
-          - platform: "ubuntu-22.04-arm"
-            args: "--bundles appimage"
-          - platform: "ubuntu-22.04-arm"
-            args: "--bundles deb"
-          - platform: "ubuntu-22.04-arm"
-            args: "--bundles rpm"
           - platform: "windows-latest"
-            args: ""
+            args: "--bundles nsis"
           - platform: "macos-latest"
-            args: "--target universal-apple-darwin"
+            args: "--target universal-apple-darwin --bundles dmg"
 
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v6
 
-      - name: Cache Rust and bun dependencies
+      - name: Cache Rust dependencies
         uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             src-tauri/target
-            node_modules
-          key: ${{ matrix.platform }}-iloader-${{ hashFiles('**/Cargo.lock', 'package-lock.json') }}
+          key: ${{ matrix.platform }}-flekpair-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-iloader-
+            ${{ matrix.platform }}-flekpair-
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04' || matrix.platform == 'ubuntu-22.04-arm'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf perl make${{ matrix.args == '--bundles appimage' && ' xdg-utils' || '' }}
-
       - name: Add MSVC to PATH
         if: matrix.platform == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Perl and Make for Windows
-        if: matrix.platform == 'windows-latest'
-        run: |
-          choco install strawberryperl make --no-progress
-
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v6
         with:
-          bun-version: latest
+          node-version: 24
+          cache: npm
 
       - name: Install frontend dependencies
-        run: bun i --frozen-lockfile
+        run: npm ci
 
       - name: Clean old bundles
-        if: matrix.platform != 'macos-latest'
-        run: bunx rimraf src-tauri/target/release/bundle
-
-      - name: Clean old bundles
-        if: matrix.platform == 'macos-latest'
-        run: |
-          bunx rimraf src-tauri/target/aarch64-apple-darwin/release/bundle
-          bunx rimraf src-tauri/target/x86_64-apple-darwin/release/bundle
-          bunx rimraf src-tauri/target/universal-apple-darwin/release/bundle
+        shell: bash
+        run: rm -rf src-tauri/target/release/bundle src-tauri/target/*/release/bundle
 
       - name: Export Apple signing secrets (release only)
         if: matrix.platform == 'macos-latest' && env.HAVE_SIGNING_SECRETS == 'true' && github.event_name == 'release'
@@ -105,11 +73,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          args: ${{ matrix.args }} ${{ github.event_name != 'release' && ' --config src-tauri/ci.conf.json' || '' }}
-          includeUpdaterJson: ${{ github.event_name == 'release' }}
+          args: ${{ matrix.args }}
           releaseId: ${{ github.event_name == 'release' && github.event.release.id || '' }}
           assetNamePattern: "[name]-[platform]-[arch][ext]"
 
@@ -136,48 +101,6 @@ jobs:
           name: macos-dmg-universal
           path: ${{ github.workspace }}/src-tauri/target/**/release/bundle/**/*.dmg
 
-      - name: Upload Linux DEB
-        uses: actions/upload-artifact@v7
-        if: matrix.platform == 'ubuntu-22.04' && matrix.args == '--bundles deb'
-        with:
-          name: linux-deb
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.deb
-
-      - name: Upload Linux RPM
-        uses: actions/upload-artifact@v7
-        if: matrix.platform == 'ubuntu-22.04' && matrix.args == '--bundles rpm'
-        with:
-          name: linux-rpm
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.rpm
-
-      - name: Upload Linux AppImage
-        uses: actions/upload-artifact@v7
-        if: matrix.platform == 'ubuntu-22.04' && matrix.args == '--bundles appimage'
-        with:
-          name: linux-appimage
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.AppImage
-
-      - name: Upload Linux DEB (ARM)
-        uses: actions/upload-artifact@v7
-        if: matrix.platform == 'ubuntu-22.04-arm' && matrix.args == '--bundles deb'
-        with:
-          name: linux-deb-arm
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.deb
-
-      - name: Upload Linux RPM (ARM)
-        uses: actions/upload-artifact@v7
-        if: matrix.platform == 'ubuntu-22.04-arm' && matrix.args == '--bundles rpm'
-        with:
-          name: linux-rpm-arm
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.rpm
-
-      - name: Upload Linux AppImage (ARM)
-        uses: actions/upload-artifact@v7
-        if: matrix.platform == 'ubuntu-22.04-arm' && matrix.args == '--bundles appimage'
-        with:
-          name: linux-appimage-arm
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.AppImage
-
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v7
         if: matrix.platform == 'windows-latest'
@@ -185,25 +108,3 @@ jobs:
           name: windows-exe
           path: |
             ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.exe
-
-  mark-latest:
-    needs: build
-    if: github.event_name == 'release'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Ensure gh CLI is available
-        run: |
-          if ! command -v gh >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y gh
-          fi
-
-      - name: Authenticate gh
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-
-      - name: Mark release as latest
-        run: |
-          gh release edit "${{ github.event.release.tag_name }}" --latest --repo "${{ github.repository }}"
