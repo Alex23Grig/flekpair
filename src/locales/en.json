@@ -6,8 +6,7 @@
   },
   "app": {
     "github": "GitHub",
-    "select_device": "Select a device",
-    "fork_notice": "Unofficial fork of iloader"
+    "select_device": "Select a device"
   },
   "device": {
     "title": "iDevice",

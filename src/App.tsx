@@ -36,7 +36,6 @@ const POLL_INTERVAL_MS = 1500;
 const HINT_DELAY_MS = 1200;
 
 const SOURCE_URL = "https://github.com/Alex23Grig/flekpair";
-const UPSTREAM_URL = "https://github.com/nab138/iloader";
 
 const osName = (deviceClass: string) => {
   if (deviceClass === "iPad") return "iPadOS";
@@ -358,7 +357,6 @@ function App() {
           {t("version")} {version}
         </span>
         <ExternalLink url={SOURCE_URL}>{t("app.github")}</ExternalLink>
-        <ExternalLink url={UPSTREAM_URL}>{t("app.fork_notice")}</ExternalLink>
       </footer>
     </main>
   );
