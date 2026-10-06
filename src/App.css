@@ -220,6 +220,14 @@ button.device-udid:hover {
   color: var(--text-muted);
 }
 
+.driver-alternative {
+  margin-top: 0.25rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.87rem;
+  color: var(--text-muted);
+}
+
 .driver-stage {
   display: flex;
   align-items: center;

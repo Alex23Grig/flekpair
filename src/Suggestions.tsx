@@ -20,20 +20,27 @@ export const ExternalLink = ({
   </a>
 );
 
+/** Text in which `((link:url:label))` becomes a link. */
+export const LinkedText = ({ text }: { text: string }) => (
+  <>
+    {text.split(/(\(\(link:[^)]+\)\))/g).map((part, index) => {
+      const link = parseLinkToken(part);
+      return link ? (
+        <ExternalLink key={index} url={link.url}>
+          {link.text}
+        </ExternalLink>
+      ) : (
+        <span key={index}>{part}</span>
+      );
+    })}
+  </>
+);
+
 export const Suggestions = ({ items }: { items: string[] }) => (
   <ul className="suggestions">
     {items.map((suggestion) => (
       <li key={suggestion}>
-        {suggestion.split(/(\(\(link:[^)]+\)\))/g).map((part, index) => {
-          const link = parseLinkToken(part);
-          return link ? (
-            <ExternalLink key={index} url={link.url}>
-              {link.text}
-            </ExternalLink>
-          ) : (
-            <span key={index}>{part}</span>
-          );
-        })}
+        <LinkedText text={suggestion} />
       </li>
     ))}
   </ul>

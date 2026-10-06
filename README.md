@@ -28,6 +28,8 @@ Windows can't talk to an iPhone until Apple's device driver ("Apple Mobile Devic
 
 If it is missing, FlekPair says so and offers **Install Apple driver**. That downloads Apple's iTunes installer from apple.com (about 200 MB), takes only the driver package out of it, checks that Windows sees Apple's signature on it, and installs just that. Windows asks for permission once. Apple's license doesn't allow shipping the driver inside FlekPair, which is why it is fetched from Apple instead.
 
+If you would rather install it yourself, the same screen links to Apple's [iTunes download](https://www.apple.com/itunes/download/win64) and to [Apple Devices](https://apps.microsoft.com/detail/9np83lwlpz9k) in the Microsoft Store. Either brings the driver with it, and FlekPair notices on its own once it is there.
+
 If iTunes or Apple Devices from the Microsoft Store is installed, FlekPair asks you to open it instead of installing anything. The Store versions bring their own copy of the driver, which works while that app is running.
 
 ### Good to know

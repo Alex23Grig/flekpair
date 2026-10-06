@@ -20,6 +20,7 @@
     "missing_title": "Apple's device driver isn't installed",
     "missing_body": "FlekPair can download it from Apple (about 200 MB) and install it. Windows will ask for permission once.",
     "install": "Install Apple driver",
+    "alternative": "Or install one of Apple's apps yourself, which brings the driver with it: ((link:https://www.apple.com/itunes/download/win64:download iTunes)) or get ((link:https://apps.microsoft.com/detail/9np83lwlpz9k:Apple Devices)) from the Microsoft Store.",
     "stopped_title": "Apple's device service isn't running",
     "stopped_body": "FlekPair can start it. Windows will ask for permission.",
     "start": "Start Apple's service",

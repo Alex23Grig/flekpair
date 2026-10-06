@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import { AppError, getErrorSuggestions, toAppError } from "./errors";
-import { Suggestions } from "./Suggestions";
+import { LinkedText, Suggestions } from "./Suggestions";
 
 type DriverState = "unsupported" | "missing" | "stopped" | "store_app";
 
@@ -144,13 +144,22 @@ export const AppleDriver = ({ error }: { error: AppError }) => {
       </button>
     ) : null;
 
+  // Installing one of Apple's own apps brings the driver too, for anyone who would rather.
+  const alternative = state === "missing" && (
+    <p className="driver-alternative">
+      <LinkedText text={t("driver.alternative")} />
+    </p>
+  );
+
   if (failure) {
+    const suggestions = getErrorSuggestions(t, failure.type);
     return (
       <>
         <p className="device-empty-title failure">{t("driver.failed")}</p>
         <pre className="detail">{failure.message}</pre>
-        <Suggestions items={getErrorSuggestions(t, failure.type)} />
+        {suggestions.length > 0 && <Suggestions items={suggestions} />}
         {action}
+        {alternative}
       </>
     );
   }
@@ -160,6 +169,7 @@ export const AppleDriver = ({ error }: { error: AppError }) => {
       <p className="device-empty-title">{t(`driver.${state}_title`)}</p>
       <p className="driver-body">{t(`driver.${state}_body`)}</p>
       {action}
+      {alternative}
     </>
   );
 };

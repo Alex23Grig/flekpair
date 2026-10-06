@@ -13,7 +13,7 @@ export const errorSuggestionKeys = {
   trust_denied: ["error.suggestions.trust"],
   canceled: [],
   filesystem: ["error.suggestions.filesystem"],
-  driver: ["error.suggestions.usbmuxd"],
+  driver: [],
   misc: ["error.suggestions.misc"],
 } as const;
 
