@@ -67,6 +67,7 @@ pub async fn sideload(
             app_path.into(),
             false,
             None::<fn(f32) -> std::future::Ready<()>>,
+            Some(&device.pairing),
         )
         .await?;
 
