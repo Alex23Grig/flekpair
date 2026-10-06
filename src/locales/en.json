@@ -16,6 +16,23 @@
     "pairing_in_progress_hint": "Please unlock your device and click \"Trust,\" then enter your passcode if prompted.",
     "pairing_cancel": "Cancel"
   },
+  "driver": {
+    "missing_title": "Apple's device driver isn't installed",
+    "missing_body": "FlekPair can download it from Apple (about 200 MB) and install it. Windows will ask for permission once.",
+    "install": "Install Apple driver",
+    "stopped_title": "Apple's device service isn't running",
+    "stopped_body": "FlekPair can start it. Windows will ask for permission.",
+    "start": "Start Apple's service",
+    "store_app_title": "Open Apple Devices or iTunes",
+    "store_app_body": "Leave it open and FlekPair will find your device.",
+    "downloading": "Downloading from Apple…",
+    "download_size": "{{received}} of {{total}} MB",
+    "unpacking": "Unpacking…",
+    "verifying": "Checking Apple's signature…",
+    "installing": "Installing. Approve the Windows prompt.",
+    "starting": "Starting Apple's service…",
+    "failed": "Couldn't set up Apple's driver"
+  },
   "pairing": {
     "export_pairing_file": "Export Pairing File",
     "pairing_file_exported_success": "Pairing file exported successfully!",

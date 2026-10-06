@@ -12,16 +12,23 @@ FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) w
 
 ## How to use
 
-1. **Windows only:** install [iTunes](https://apple.co/ms) or "Apple Devices" from the Microsoft Store, so the computer can talk to the device. macOS needs nothing extra.
-2. Connect your iPhone or iPad with a USB cable and unlock it. The device must have a passcode set.
-3. Open FlekPair and click **Export Pairing File**.
-4. If the device asks, tap **Trust** and enter your passcode.
+1. Connect your iPhone or iPad with a USB cable and unlock it. The device must have a passcode set.
+2. Open FlekPair and click **Export Pairing File**.
+3. If the device asks, tap **Trust** and enter your passcode.
 
 The file lands in your Downloads folder as `pairingFile.plist` and is selected in Finder or Explorer. An existing file is never replaced: a second one is saved as `pairingFile (1).plist`.
 
 Only devices connected by cable are listed. With more than one connected, pick the device from the list above the button.
 
 The device's UDID is shown under its name as soon as it is plugged in, before it is trusted. Click it to copy.
+
+### Windows: Apple's driver
+
+Windows can't talk to an iPhone until Apple's device driver ("Apple Mobile Device Support") is installed. If you have iTunes, you already have it.
+
+If it is missing, FlekPair says so and offers **Install Apple driver**. That downloads Apple's iTunes installer from apple.com (about 200 MB), takes only the driver package out of it, checks that Windows sees Apple's signature on it, and installs just that. Windows asks for permission once. Apple's license doesn't allow shipping the driver inside FlekPair, which is why it is fetched from Apple instead.
+
+If iTunes or Apple Devices from the Microsoft Store is installed, FlekPair asks you to open it instead of installing anything. The Store versions bring their own copy of the driver, which works while that app is running.
 
 ### Good to know
 
@@ -58,6 +65,8 @@ Make a production build: `npm run tauri build`
 To work on the interface without a device, run `npm run dev` and open <http://localhost:1420> in a browser. A stand-in backend takes over there; choose what it simulates with `?mock=device`, `two`, `none`, `unnamed`, `error`, `denied`, `nousbmuxd` or `stuck`, and the language with `&lng=ru`.
 
 The app icon is generated from `app-icon.svg`: `npm run tauri icon app-icon.svg`.
+
+`cargo test` in `src-tauri` covers unpacking Apple's installer. If the driver setup stops working, `cargo test -- --ignored apples_installer` downloads the real installer and shows whether Apple has changed how it is packaged.
 
 ## Releasing
 

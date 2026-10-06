@@ -19,6 +19,8 @@ pub enum AppError {
     Canceled(String),
     #[error("{0}: {1}")]
     Filesystem(String, String),
+    #[error("{0}: {1}")]
+    Driver(String, String),
 }
 
 impl AppError {
@@ -33,6 +35,7 @@ impl AppError {
             AppError::TrustDenied => "trust_denied",
             AppError::Canceled(_) => "canceled",
             AppError::Filesystem(..) => "filesystem",
+            AppError::Driver(..) => "driver",
         }
     }
 }

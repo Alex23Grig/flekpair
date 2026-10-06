@@ -13,6 +13,7 @@ export const errorSuggestionKeys = {
   trust_denied: ["error.suggestions.trust"],
   canceled: [],
   filesystem: ["error.suggestions.filesystem"],
+  driver: ["error.suggestions.usbmuxd"],
   misc: ["error.suggestions.misc"],
 } as const;
 
@@ -26,11 +27,18 @@ export type AppError = {
 export type Platform = "mac" | "windows" | "linux";
 
 const userAgent = navigator.userAgent;
-export const platform: Platform = userAgent.includes("Mac")
-  ? "mac"
-  : userAgent.includes("Linux")
-    ? "linux"
-    : "windows";
+// ?platform= lets the browser preview show what another system would.
+const previewed = import.meta.env.DEV
+  ? new URLSearchParams(location.search).get("platform")
+  : null;
+export const platform: Platform =
+  previewed === "mac" || previewed === "windows" || previewed === "linux"
+    ? previewed
+    : userAgent.includes("Mac")
+      ? "mac"
+      : userAgent.includes("Linux")
+        ? "linux"
+        : "windows";
 
 export const isErrorVariant = (value: string): value is ErrorVariant => {
   return value in errorSuggestionKeys;
