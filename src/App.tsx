@@ -34,6 +34,7 @@ const POLL_INTERVAL_MS = 1500;
 // Exporting again for a device paired earlier takes a moment and needs nothing from the user,
 // so the "unlock and tap Trust" hint only shows once the wait gets longer than that.
 const HINT_DELAY_MS = 1200;
+const COPIED_NOTICE_MS = 1500;
 
 const SOURCE_URL = "https://github.com/Alex23Grig/flekpair";
 
@@ -105,6 +106,27 @@ const DeviceGlyph = ({ tablet }: { tablet: boolean }) => (
   </svg>
 );
 
+const CopyGlyph = ({ done }: { done: boolean }) => (
+  <svg
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {done ? (
+      <path d="M3 8.6l3.2 3.2L13 4.6" />
+    ) : (
+      <>
+        <rect x="5.5" y="5.5" width="9" height="9" rx="2" />
+        <path d="M3.5 10.5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2" />
+      </>
+    )}
+  </svg>
+);
+
 function App() {
   const { t } = useTranslation();
 
@@ -115,6 +137,7 @@ function App() {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [showHint, setShowHint] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedUdid, setCopiedUdid] = useState<string | null>(null);
   const [version, setVersion] = useState("");
 
   useEffect(() => {
@@ -190,6 +213,19 @@ function App() {
     }
   }, [selected, working, deviceName]);
 
+  useEffect(() => {
+    if (!copiedUdid) return;
+    const timer = setTimeout(() => setCopiedUdid(null), COPIED_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [copiedUdid]);
+
+  const copyUdid = useCallback((udid: string) => {
+    navigator.clipboard
+      .writeText(udid)
+      .then(() => setCopiedUdid(udid))
+      .catch((e) => console.error("Failed to copy UDID", e));
+  }, []);
+
   const copyError = useCallback((error: AppError) => {
     navigator.clipboard
       .writeText(error.message)
@@ -259,6 +295,22 @@ function App() {
                   .filter(Boolean)
                   .join(" · ")}
               </span>
+              {copiedUdid === selected.udid ? (
+                <span className="device-udid copied">
+                  <CopyGlyph done />
+                  {t("common.copied_success")}
+                </span>
+              ) : (
+                <button
+                  className="device-udid"
+                  title={t("common.copy_to_clipboard")}
+                  onClick={() => copyUdid(selected.udid)}
+                >
+                  <span className="device-udid-label">UDID</span>
+                  <span className="device-udid-value">{selected.udid}</span>
+                  <CopyGlyph done={false} />
+                </button>
+              )}
             </div>
           </div>
         )}

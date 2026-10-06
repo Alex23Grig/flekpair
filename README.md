@@ -21,6 +21,8 @@ The file lands in your Downloads folder as `pairingFile.plist` and is selected i
 
 Only devices connected by cable are listed. With more than one connected, pick the device from the list above the button.
 
+The device's UDID is shown under its name as soon as it is plugged in, before it is trusted. Click it to copy.
+
 ### Good to know
 
 - macOS may ask once whether FlekPair can access your Downloads folder. If you decline, the file is saved to FlekPair's own data folder instead and shown there.

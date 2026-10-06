@@ -27,6 +27,7 @@
   --accent-end: #5b3df5;
   --success: #1a8f43;
   --danger: #c9302c;
+  --monospace: "SF Mono", "Menlo", "Cascadia Mono", "Consolas", monospace;
 
   color: var(--text);
   background-color: var(--background);
@@ -161,6 +162,49 @@ select.device-name:disabled {
 .device-meta {
   font-size: 0.87rem;
   color: var(--text-muted);
+}
+
+.device-udid {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  margin-top: 0.15rem;
+  margin-inline-start: -0.35rem;
+  padding: 0.1rem 0.35rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  font-size: 0.8rem;
+  text-align: start;
+  color: var(--text-muted);
+}
+
+button.device-udid:hover {
+  background: var(--inset);
+  color: var(--text);
+}
+
+.device-udid.copied {
+  color: var(--success);
+}
+
+.device-udid-label {
+  flex: none;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.device-udid-value {
+  font-family: var(--monospace);
+  overflow-wrap: anywhere;
+}
+
+.device-udid svg {
+  flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
 .device-empty-title {
@@ -379,7 +423,7 @@ button:disabled {
   padding: 0.55rem 0.7rem;
   border-radius: 0.6rem;
   background: var(--inset);
-  font-family: "SF Mono", "Menlo", "Cascadia Mono", "Consolas", monospace;
+  font-family: var(--monospace);
   font-size: 0.8rem;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
