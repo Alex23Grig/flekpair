@@ -11,7 +11,8 @@ const iphone = {
   deviceClass: "iPhone",
 };
 const ipad = {
-  udid: "00008103-001D2B3A4C56701E",
+  // Devices older than the iPhone XS report the longer, undashed form.
+  udid: "3f7a91c2d04e5b68a1f09c3d7e2b4a6c8d0e1f25",
   name: "Studio iPad Pro",
   version: "17.2",
   deviceClass: "iPad",
