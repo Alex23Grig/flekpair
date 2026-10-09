@@ -1,6 +1,6 @@
 [package]
 name = "flekpair"
-version = "1.0.1"
+version = "1.0.2"
 description = "One-click pairing file exporter for iPhone and iPad"
 authors = ["FlekPair contributors"]
 license = "MIT"
