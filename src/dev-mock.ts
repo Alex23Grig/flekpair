@@ -1,5 +1,5 @@
 // Fake backend for working on the UI in a browser, without the Tauri shell or a device.
-// Pick a scenario with ?mock=device|wifi|two|none|unnamed|error|denied|nousbmuxd|stuck, or with
+// Pick a scenario with ?mock=device|wifi|two|mixed|none|unnamed|error|denied|nousbmuxd|stuck, or with
 // &platform=windows one of nodriver|driverfail|driverstopped|storeapp
 import { mockIPC } from "@tauri-apps/api/mocks";
 
@@ -25,6 +25,8 @@ const devices = {
   none: [],
   wifi: [{ ...iphone, link: "network" }],
   two: [iphone, ipad],
+  // The backend lists cabled devices first.
+  mixed: [ipad, { ...iphone, link: "network" }],
   unnamed: [{ ...iphone, name: "", version: "", deviceClass: "" }],
 }[scenario] ?? [iphone];
 

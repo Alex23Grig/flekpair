@@ -28,7 +28,7 @@ On a Mac, a device that has trusted this computer before can be used over Wi-Fi.
 
 A phone that nothing is talking to drops off the network within a minute. If yours doesn't show up, wake and unlock it, and give macOS a minute or two after the phone joins the network. Once FlekPair sees the phone it keeps a connection to it open, so it stays listed. It stops doing that ten minutes after you last used FlekPair, so that an app left open doesn't keep a phone awake.
 
-If a device is both plugged in and on Wi-Fi, FlekPair uses the cable. On Windows only cabled devices are listed.
+If a device is both plugged in and on Wi-Fi, FlekPair uses the cable, and cabled devices come first in the list. On Windows only cabled devices are listed.
 
 ### Windows: Apple's driver
 
@@ -72,7 +72,7 @@ For more detail, start FlekPair from a terminal with `FLEKPAIR_LOG=debug` to pri
 For development with hot reload: `npm run tauri dev`
 Make a production build: `npm run tauri build`
 
-To work on the interface without a device, run `npm run dev` and open <http://localhost:1420> in a browser. A stand-in backend takes over there; choose what it simulates with `?mock=device`, `two`, `none`, `unnamed`, `error`, `denied`, `nousbmuxd` or `stuck`, and the language with `&lng=ru`.
+To work on the interface without a device, run `npm run dev` and open <http://localhost:1420> in a browser. A stand-in backend takes over there; choose what it simulates with `?mock=device`, `wifi`, `two`, `mixed`, `none`, `unnamed`, `error`, `denied`, `nousbmuxd` or `stuck`, and the language with `&lng=ru`.
 
 The app icon is generated from `app-icon.svg`: `npm run tauri icon app-icon.svg`.
 

@@ -160,8 +160,30 @@ select.device-name:disabled {
 }
 
 .device-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
   font-size: 0.87rem;
   color: var(--text-muted);
+}
+
+.device-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-block: 0.08rem;
+  padding-inline: 0.4rem 0.55rem;
+  border-radius: 999px;
+  background: var(--inset);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.device-link svg {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .device-udid {

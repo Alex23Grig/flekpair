@@ -291,8 +291,8 @@ async fn devices() -> Result<Vec<(UsbmuxdDevice, Link)>, AppError> {
     Ok(reachable(devices, WIRELESS))
 }
 
-/// One entry per device. usbmuxd lists a device once for each way it sees it; the cable is
-/// preferred because pairing a device for the first time only works over it.
+/// One entry per device, cabled ones first. usbmuxd lists a device once for each way it sees
+/// it; the cable is preferred because pairing a device for the first time only works over it.
 fn reachable(devices: Vec<UsbmuxdDevice>, wireless: bool) -> Vec<(UsbmuxdDevice, Link)> {
     let mut chosen: Vec<(UsbmuxdDevice, Link)> = Vec::new();
     for device in devices {
@@ -310,6 +310,8 @@ fn reachable(devices: Vec<UsbmuxdDevice>, wireless: bool) -> Vec<(UsbmuxdDevice,
             None => chosen.push((device, link)),
         }
     }
+    // The app starts out with the first one selected.
+    chosen.sort_by_key(|(_, link)| *link != Link::Usb);
     chosen
 }
 
@@ -345,7 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn lists_each_device_once_and_prefers_the_cable() {
+    fn lists_each_device_once_with_cabled_ones_first() {
         let wifi = || Connection::Network(IpAddr::V4(Ipv4Addr::new(192, 168, 0, 20)));
         let seen = || {
             vec![
@@ -362,8 +364,8 @@ mod tests {
             summary(reachable(seen(), true)),
             [
                 ("phone".to_string(), 3, Link::Usb),
-                ("tablet".to_string(), 2, Link::Network),
                 ("old".to_string(), 5, Link::Usb),
+                ("tablet".to_string(), 2, Link::Network),
             ]
         );
         assert_eq!(

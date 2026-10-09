@@ -87,6 +87,32 @@ const CopyGlyph = ({ done }: { done: boolean }) => (
   </svg>
 );
 
+const LinkGlyph = ({ link }: { link: DeviceInfo["link"] }) => (
+  <svg
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {link === "network" ? (
+      <>
+        <path d="M1.8 6.3a9.2 9.2 0 0 1 12.4 0" />
+        <path d="M4.3 9a5.5 5.5 0 0 1 7.4 0" />
+        <path d="M8 12h.01" />
+      </>
+    ) : (
+      <>
+        <path d="M6 1.8v2.7M10 1.8v2.7" />
+        <path d="M4.2 4.5h7.6v2.7a3.8 3.8 0 0 1-7.6 0z" />
+        <path d="M8 11v3.2" />
+      </>
+    )}
+  </svg>
+);
+
 function App() {
   const { t } = useTranslation();
 
@@ -249,13 +275,12 @@ function App() {
                 <span className="device-name">{deviceName(selected)}</span>
               )}
               <span className="device-meta">
-                {[
-                  selected.version &&
-                    `${osName(selected.deviceClass)} ${selected.version}`,
-                  selected.link === "network" ? "Wi-Fi" : "USB",
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
+                <span className="device-link">
+                  <LinkGlyph link={selected.link} />
+                  {selected.link === "network" ? "Wi-Fi" : "USB"}
+                </span>
+                {selected.version &&
+                  `${osName(selected.deviceClass)} ${selected.version}`}
               </span>
               {copiedUdid === selected.udid ? (
                 <span className="device-udid copied">
