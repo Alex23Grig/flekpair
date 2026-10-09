@@ -1,6 +1,7 @@
 mod apple_driver;
 mod device;
 mod error;
+mod nearby;
 mod pairing;
 mod symbol;
 
@@ -10,6 +11,7 @@ use crate::{
         install_apple_driver,
     },
     device::{DeviceCache, KeepAwake, list_devices},
+    nearby::Nearby,
     pairing::{
         LastExport, PairingCancelToken, RemotePairings, cancel_pairing, export_pairing_file,
         reveal_pairing_file,
@@ -27,6 +29,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(DeviceCache::default())
         .manage(KeepAwake::default())
+        .manage(Nearby::default())
         .manage(PairingCancelToken::default())
         .manage(RemotePairings::default())
         .manage(LastExport::default())
@@ -42,6 +45,12 @@ pub fn run() {
             cancel_apple_driver,
             system_symbol,
         ])
+        .setup(|app| {
+            if nearby::ENABLED {
+                nearby::watch(app.handle().clone());
+            }
+            Ok(())
+        })
         .on_window_event(|window, event| {
             if let WindowEvent::Focused(true) = event {
                 window.state::<KeepAwake>().extend();
