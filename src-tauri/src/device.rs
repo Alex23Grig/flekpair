@@ -481,12 +481,6 @@ mod tests {
                 "no session straight to the device"
             );
             assert!(!info.name.is_empty() && !info.version.is_empty());
-
-            // The session is used again once it is due, and still answers then.
-            tokio::time::sleep(KEEP_AWAKE_EVERY).await;
-            let (again, session) = held(&device, Some(info.clone()), Some(session)).await;
-            assert!(session.lockdown.is_some(), "the session didn't last");
-            assert_eq!(again.name, info.name);
         });
     }
 

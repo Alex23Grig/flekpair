@@ -11,7 +11,7 @@ use crate::{
         install_apple_driver,
     },
     device::{DeviceCache, KeepAwake, list_devices},
-    nearby::Nearby,
+    nearby::{Nearby, network_search},
     pairing::{
         LastExport, PairingCancelToken, RemotePairings, cancel_pairing, export_pairing_file,
         reveal_pairing_file,
@@ -44,6 +44,7 @@ pub fn run() {
             install_apple_driver,
             cancel_apple_driver,
             system_symbol,
+            network_search,
         ])
         .setup(|app| {
             if nearby::ENABLED {

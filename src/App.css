@@ -246,6 +246,13 @@ button.device-udid:hover {
   color: var(--danger);
 }
 
+.device-search {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.87rem;
+  color: var(--text-muted);
+}
+
 .driver-body {
   font-size: 0.9rem;
   color: var(--text-muted);

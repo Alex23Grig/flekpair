@@ -19,8 +19,9 @@ use std::{
 };
 
 use idevice::pairing_file::PairingFile;
+use serde::Serialize;
 use socket2::{Domain, Protocol, Socket, Type};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 use tokio::net::UdpSocket;
 use tracing::debug;
 
@@ -78,6 +79,23 @@ pub struct Nearby {
     records: Mutex<Records>,
     /// Where each recognised device last answered from, and when.
     seen: Mutex<HashMap<String, (Ipv4Addr, Instant)>>,
+    last: Mutex<Option<Search>>,
+}
+
+/// What one look at the network came to.
+#[derive(Serialize, Clone, Copy)]
+pub struct Search {
+    /// Devices that answered at all.
+    answered: usize,
+    /// Those among them that this computer holds a pairing record for.
+    recognised: usize,
+}
+
+/// How the last look at the network went, to tell why a device on Wi-Fi isn't listed. `None`
+/// where the app doesn't look itself, or hasn't yet.
+#[tauri::command]
+pub fn network_search(nearby: State<'_, Nearby>) -> Option<Search> {
+    *nearby.last.lock().unwrap()
 }
 
 #[derive(Default)]
@@ -136,16 +154,22 @@ impl Nearby {
         let announcements = ask_everywhere().await;
         let records = self.records.lock().unwrap();
         let mut seen = self.seen.lock().unwrap();
+        let mut recognised = 0;
         for announcement in &announcements {
-            let recognised = records
+            let from = records
                 .by_udid
                 .iter()
                 .find(|(_, record)| announcement.is_from(record));
-            if let Some((udid, _)) = recognised {
+            if let Some((udid, _)) = from {
                 seen.insert(udid.clone(), (announcement.address, Instant::now()));
+                recognised += 1;
             }
         }
         seen.retain(|_, (_, at)| at.elapsed() < GONE_AFTER);
+        *self.last.lock().unwrap() = Some(Search {
+            answered: announcements.len(),
+            recognised,
+        });
     }
 
     async fn read_records(&self) {

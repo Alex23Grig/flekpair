@@ -14,7 +14,9 @@
     "unable_load_devices_prefix": "Unable to load devices",
     "pairing_in_progress_header": "Pairing with {{device}}...",
     "pairing_in_progress_hint": "Please unlock your device and click \"Trust,\" then enter your passcode if prompted.",
-    "pairing_cancel": "Cancel"
+    "pairing_cancel": "Cancel",
+    "wifi_search_none": "Wi-Fi search: no device on the network answered.",
+    "wifi_search_unrecognised": "Wi-Fi search: a device answered, but it doesn't trust this PC yet. Connect it with a cable once."
   },
   "driver": {
     "missing_title": "Apple's device driver isn't installed",

@@ -80,6 +80,13 @@ mockIPC(async (cmd) => {
   switch (cmd) {
     case "plugin:app|version":
       return "1.0.0";
+    // Only Windows looks at the network itself: ?platform=windows&answered=1
+    case "network_search": {
+      const params = new URLSearchParams(location.search);
+      return params.get("platform") === "windows"
+        ? { answered: Number(params.get("answered") ?? 0), recognised: 0 }
+        : null;
+    }
     // Apple's symbols come from macOS itself, so a browser shows the drawn ones.
     case "system_symbol":
       return null;
