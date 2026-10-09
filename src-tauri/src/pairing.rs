@@ -23,7 +23,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 use crate::{
-    device::{KeepAwake, LABEL, Link, find, get_usbmuxd, string_value},
+    device::{Heartbeats, KeepAwake, LABEL, Link, find, get_usbmuxd, string_value},
     error::{AppError, chain},
     nearby::Nearby,
 };
@@ -131,6 +131,8 @@ pub fn reveal_pairing_file(app: AppHandle, last: State<'_, LastExport>) -> Resul
 
 async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> {
     let device = find(&app.state::<Nearby>(), udid).await?;
+    // Over Wi-Fi the device drops the connections below unless its calls are being answered.
+    app.state::<Heartbeats>().keep(&device).await;
     let provider = device.provider()?;
     let provider = &*provider;
 

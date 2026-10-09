@@ -7,6 +7,7 @@ use std::{
 
 use idevice::{
     IdeviceError, IdeviceService,
+    heartbeat::HeartbeatClient,
     lockdown::LockdownClient,
     pairing_file::PairingFile,
     provider::{IdeviceProvider, TcpProvider},
@@ -37,6 +38,11 @@ const KEEP_AWAKE_EVERY: Duration = Duration::from_secs(4);
 /// How long devices on Wi-Fi are kept awake after the app was last used. Past that it has most
 /// likely been left open, and a phone shouldn't lose battery to it.
 const KEEP_AWAKE_FOR: Duration = Duration::from_secs(10 * 60);
+
+/// How many seconds a device's first call is waited for. It comes as soon as the service opens.
+const FIRST_CALL_WAIT: u64 = 5;
+/// How many seconds late a call may be before the device is taken to have gone.
+const CALL_SLACK: u64 = 5;
 
 /// How a device is reached.
 #[derive(Serialize, Clone, Copy, PartialEq, Default, Debug)]
@@ -132,6 +138,85 @@ impl Default for KeepAwake {
     }
 }
 
+/// Answers the calls a device on Wi-Fi makes to a computer that is using it.
+///
+/// Apple's own service does this for the devices it lists. For a device reached directly nobody
+/// would, and the device then closes any service connection from this computer the moment it
+/// opens. That is how the remote pairing step failed on a PC before this was here.
+struct Heartbeat(tokio::task::JoinHandle<()>);
+
+impl Heartbeat {
+    /// Returns once the device's first call has been answered.
+    async fn start(provider: &dyn IdeviceProvider) -> Result<Self, IdeviceError> {
+        let mut client = HeartbeatClient::connect(provider).await?;
+        let mut interval = client.get_marco(FIRST_CALL_WAIT).await?;
+        client.send_polo().await?;
+
+        Ok(Self(tokio::spawn(async move {
+            // Each call says how many seconds it is until the next.
+            while let Ok(next) = client.get_marco(interval + CALL_SLACK).await {
+                interval = next;
+                if client.send_polo().await.is_err() {
+                    break;
+                }
+            }
+        })))
+    }
+}
+
+impl Drop for Heartbeat {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
+/// The heartbeats kept up, one for each device reached directly.
+#[derive(Default)]
+pub struct Heartbeats(tokio::sync::Mutex<HashMap<String, Heartbeat>>);
+
+impl Heartbeats {
+    /// Makes sure the device's calls are being answered. Does nothing for a device that usbmuxd
+    /// lists, whose calls Apple's service answers.
+    pub async fn keep(&self, device: &Reachable) {
+        if !matches!(device.route, Route::Direct(..)) {
+            return;
+        }
+        // Held throughout, so that listing and exporting don't each start one.
+        let mut kept = self.0.lock().await;
+        if kept
+            .get(&device.udid)
+            .is_some_and(|heartbeat| !heartbeat.0.is_finished())
+        {
+            return;
+        }
+
+        let started = async {
+            let provider = device.provider().map_err(|e| e.to_string())?;
+            tokio::time::timeout(DESCRIBE_TIMEOUT, Heartbeat::start(&*provider))
+                .await
+                .map_err(|_| "timed out".to_string())?
+                .map_err(|e| chain(&e))
+        };
+        match started.await {
+            Ok(heartbeat) => {
+                kept.insert(device.udid.clone(), heartbeat);
+            }
+            Err(e) => {
+                debug!("No heartbeat with {}: {e}", device.udid);
+                kept.remove(&device.udid);
+            }
+        }
+    }
+
+    /// Stops answering every device but these.
+    async fn keep_only(&self, udids: &[&str]) {
+        self.0
+            .lock()
+            .await
+            .retain(|udid, _| udids.contains(&udid.as_str()));
+    }
+}
+
 impl KeepAwake {
     /// Called when the app is used: brought to the front, or asked to export.
     pub fn extend(&self) {
@@ -148,6 +233,7 @@ impl KeepAwake {
 pub async fn list_devices(
     cache: State<'_, DeviceCache>,
     awake: State<'_, KeepAwake>,
+    heartbeats: State<'_, Heartbeats>,
     nearby: State<'_, Nearby>,
 ) -> Result<Vec<DeviceInfo>, AppError> {
     let devices = devices(&nearby).await?;
@@ -159,9 +245,10 @@ pub async fn list_devices(
     let looked = futures::future::join_all(devices.iter().map(|device| {
         let cached = known.get(&device.udid).cloned();
         let session = sessions.remove(&device.udid);
+        let heartbeats = &*heartbeats;
         async move {
             if device.link == Link::Network && keep_awake {
-                let (info, session) = held(device, cached, session).await;
+                let (info, session) = held(device, cached, session, heartbeats).await;
                 (info, Some(session))
             } else {
                 let info = match cached {
@@ -178,11 +265,14 @@ pub async fn list_devices(
     }))
     .await;
 
+    let mut answering = Vec::new();
     for (info, session) in &looked {
         if session.as_ref().is_some_and(|held| held.lockdown.is_some()) {
             nearby.still_there(&info.udid);
+            answering.push(info.udid.as_str());
         }
     }
+    heartbeats.keep_only(&answering).await;
 
     let (infos, sessions): (Vec<_>, Vec<_>) = looked.into_iter().unzip();
     *awake.sessions.lock().unwrap() = infos
@@ -205,6 +295,7 @@ async fn held(
     device: &Reachable,
     cached: Option<DeviceInfo>,
     session: Option<Session>,
+    heartbeats: &Heartbeats,
 ) -> (DeviceInfo, Session) {
     let mut session = session
         // A device that came back is reached another way, and connections made the old way
@@ -249,6 +340,9 @@ async fn held(
             }
         }
     };
+    if session.lockdown.is_some() {
+        heartbeats.keep(device).await;
+    }
     session.due = Instant::now() + KEEP_AWAKE_EVERY;
 
     (info.unwrap_or_else(unnamed), session)
@@ -475,7 +569,7 @@ mod tests {
                 route: Route::Direct(address, Box::new(record)),
             };
 
-            let (info, session) = held(&device, None, None).await;
+            let (info, session) = held(&device, None, None, &Heartbeats::default()).await;
             assert!(
                 session.lockdown.is_some(),
                 "no session straight to the device"

@@ -10,7 +10,7 @@ use crate::{
         DriverSetup, apple_driver_progress, apple_driver_state, cancel_apple_driver,
         install_apple_driver,
     },
-    device::{DeviceCache, KeepAwake, list_devices},
+    device::{DeviceCache, Heartbeats, KeepAwake, list_devices},
     nearby::{Nearby, network_search},
     pairing::{
         LastExport, PairingCancelToken, RemotePairings, cancel_pairing, export_pairing_file,
@@ -29,6 +29,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(DeviceCache::default())
         .manage(KeepAwake::default())
+        .manage(Heartbeats::default())
         .manage(Nearby::default())
         .manage(PairingCancelToken::default())
         .manage(RemotePairings::default())
