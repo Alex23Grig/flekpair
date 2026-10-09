@@ -22,13 +22,17 @@ With more than one device connected, pick the one you want from the list above t
 
 The device's UDID is shown under its name as soon as it is plugged in, before it is trusted. Click it to copy.
 
-### Without a cable (macOS)
+### Without a cable
 
-On a Mac, a device that has trusted this computer before can be used over Wi-Fi. It shows up marked **Wi-Fi** when both are on the same network and **Show this iPhone when on Wi-Fi** is turned on for it in Finder. The first connection, where you tap **Trust**, still needs a cable, and so does a device that has stopped trusting the computer.
+If you have connected the device to this computer before and both are on the same network, unlock it and it should appear in FlekPair marked **Wi-Fi**, with no cable. If it doesn't appear, connect it with a cable as usual. The empty list says the same.
 
-A phone that nothing is talking to drops off the network within a minute. If yours doesn't show up, wake and unlock it, and give macOS a minute or two after the phone joins the network. Once FlekPair sees the phone it keeps a connection to it open, so it stays listed. It stops doing that ten minutes after you last used FlekPair, so that an app left open doesn't keep a phone awake.
+The first connection, where you tap **Trust**, always needs a cable, and so does a device that has stopped trusting the computer. The device also has to be set to show up on Wi-Fi: **Show this iPhone when on Wi-Fi** in Finder, or **Sync with this iPhone over Wi-Fi** in iTunes or Apple Devices.
 
-If a device is both plugged in and on Wi-Fi, FlekPair uses the cable, and cabled devices come first in the list. On Windows only cabled devices are listed.
+On a Mac, macOS finds the device. On Windows FlekPair searches the network itself and answers the device's heartbeat, so Apple's driver is enough and neither iTunes nor Bonjour is needed. To recognise a device there, it keeps the UDIDs of devices it has seen on a cable in its data folder.
+
+A phone that nothing is talking to drops off the network within a minute. If yours doesn't show up, wake and unlock it, and give it a minute or two after it joins the network. Once FlekPair sees the phone it keeps a connection to it open, so it stays listed. It stops doing that ten minutes after you last used FlekPair, so that an app left open doesn't keep a phone awake.
+
+If a device is both plugged in and on Wi-Fi, FlekPair uses the cable, and cabled devices come first in the list.
 
 ### Windows: Apple's driver
 
@@ -77,6 +81,8 @@ To work on the interface without a device, run `npm run dev` and open <http://lo
 The app icon is generated from `app-icon.svg`: `npm run tauri icon app-icon.svg`.
 
 `cargo test` in `src-tauri` covers unpacking Apple's installer. If the driver setup stops working, `cargo test -- --ignored apples_installer` downloads the real installer and shows whether Apple has changed how it is packaged.
+
+`FLEKPAIR_UDID=<udid> cargo test -- --ignored reaches_a_trusted_device` tries the network search for real. It needs that device to trust the computer and to be awake on the same network.
 
 ## Releasing
 

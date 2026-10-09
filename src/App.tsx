@@ -22,6 +22,12 @@ type SystemSymbol = {
   ratio: number;
 };
 
+// How the app's own look at the network went, where it looks: see `nearby.rs`.
+type NetworkSearch = {
+  answered: number;
+  recognised: number;
+};
+
 type ExportedPairing = {
   path: string;
   fileName: string;
@@ -40,6 +46,9 @@ const HINT_DELAY_MS = 1200;
 const COPIED_NOTICE_MS = 1500;
 
 const SOURCE_URL = "https://github.com/Alex23Grig/flekpair";
+
+// Where a device that has trusted the computer before can be used without a cable.
+const WIRELESS = platform === "mac" || platform === "windows";
 
 const osName = (deviceClass: string) => {
   if (deviceClass === "iPad") return "iPadOS";
@@ -142,6 +151,7 @@ function App() {
   // null until usbmuxd has answered once, so launch doesn't flash "No devices found."
   const [devices, setDevices] = useState<DeviceInfo[] | null>(null);
   const [devicesError, setDevicesError] = useState<AppError | null>(null);
+  const [search, setSearch] = useState<NetworkSearch | null>(null);
   const [selectedUdid, setSelectedUdid] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [showHint, setShowHint] = useState(false);
@@ -179,9 +189,11 @@ function App() {
     const poll = async () => {
       try {
         const list = await invoke<DeviceInfo[]>("list_devices");
+        const searched = await invoke<NetworkSearch | null>("network_search");
         if (stopped) return;
         setDevices(list);
         setDevicesError(null);
+        setSearch(searched);
       } catch (e) {
         if (stopped) return;
         setDevices([]);
@@ -291,7 +303,21 @@ function App() {
             <p className="device-empty-title">
               {t("device.no_devices_found_period")}
             </p>
+            {WIRELESS && (
+              <p className="device-wifi-hint">
+                {t("device.wifi_hint", {
+                  computer: platform === "mac" ? "Mac" : "PC",
+                })}
+              </p>
+            )}
             <Suggestions items={getErrorSuggestions(t, "no_device")} />
+            {search && search.recognised === 0 && (
+              <p className="device-search">
+                {search.answered === 0
+                  ? t("device.wifi_search_none")
+                  : t("device.wifi_search_unrecognised")}
+              </p>
+            )}
           </>
         ) : (
           <div className="device-row">

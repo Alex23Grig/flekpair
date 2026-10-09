@@ -12,7 +12,7 @@ use idevice::{
     IdeviceError, IdeviceService,
     lockdown::LockdownClient,
     pairing_file::PairingFile,
-    provider::UsbmuxdProvider,
+    provider::IdeviceProvider,
     remote_pairing::{RemotePairingLockdownService, RpPairingFile},
 };
 use plist_macro::{plist, plist_to_xml_bytes};
@@ -23,8 +23,9 @@ use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 use crate::{
-    device::{KeepAwake, LABEL, Link, get_provider, get_usbmuxd, string_value},
+    device::{Heartbeats, KeepAwake, LABEL, Link, find, get_usbmuxd, string_value},
     error::{AppError, chain},
+    nearby::Nearby,
 };
 
 const FILE_STEM: &str = "pairingFile";
@@ -129,9 +130,13 @@ pub fn reveal_pairing_file(app: AppHandle, last: State<'_, LastExport>) -> Resul
 }
 
 async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> {
-    let (provider, link) = get_provider(udid).await?;
+    let device = find(&app.state::<Nearby>(), udid).await?;
+    // Over Wi-Fi the device drops the connections below unless its calls are being answered.
+    app.state::<Heartbeats>().keep(&device).await;
+    let provider = device.provider()?;
+    let provider = &*provider;
 
-    let (record, mut lockdown) = trusted_session(&provider, udid, link).await?;
+    let (record, mut lockdown) = trusted_session(provider, udid, device.link).await?;
 
     lockdown
         .set_value(
@@ -156,7 +161,7 @@ async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> 
         return Ok(plist_to_xml_bytes(&lockdown_plist));
     }
 
-    let rppairing_plist = rppairing_plist(app, &provider, udid).await?;
+    let rppairing_plist = rppairing_plist(app, provider, udid).await?;
 
     let pairing_plist = plist!(dict {
         :< lockdown_plist,
@@ -169,7 +174,7 @@ async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> 
 /// Returns this computer's pairing record for the device and a lockdown session started with
 /// it, pairing first if the computer isn't trusted or the device no longer accepts the record.
 async fn trusted_session(
-    provider: &UsbmuxdProvider,
+    provider: &dyn IdeviceProvider,
     udid: &str,
     link: Link,
 ) -> Result<(PairingFile, LockdownClient), AppError> {
@@ -212,7 +217,7 @@ async fn trusted_session(
 
 /// Has the device trust this computer, like the prompt shown when it is first plugged in, and
 /// stores the resulting record with usbmuxd so every other app on the computer can use it too.
-async fn pair(provider: &UsbmuxdProvider, udid: &str) -> Result<PairingFile, AppError> {
+async fn pair(provider: &dyn IdeviceProvider, udid: &str) -> Result<PairingFile, AppError> {
     let system_buid = get_usbmuxd().await?.get_buid().await.map_err(|e| {
         AppError::Usbmuxd("Failed to get system BUID from usbmuxd".into(), chain(&e))
     })?;
@@ -252,7 +257,7 @@ async fn pair(provider: &UsbmuxdProvider, udid: &str) -> Result<PairingFile, App
     Ok(record)
 }
 
-async fn connect_lockdown(provider: &UsbmuxdProvider) -> Result<LockdownClient, AppError> {
+async fn connect_lockdown(provider: &dyn IdeviceProvider) -> Result<LockdownClient, AppError> {
     LockdownClient::connect(provider)
         .await
         .map_err(|e| AppError::DeviceComs("Failed to connect to lockdown".into(), chain(&e)))
@@ -275,7 +280,7 @@ fn lockdown_plist(mut record: PairingFile, udid: &str) -> Result<plist::Dictiona
 
 async fn rppairing_plist(
     app: &AppHandle,
-    provider: &UsbmuxdProvider,
+    provider: &dyn IdeviceProvider,
     udid: &str,
 ) -> Result<plist::Dictionary, AppError> {
     let pairings = app.state::<RemotePairings>();
