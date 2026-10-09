@@ -35,7 +35,7 @@ If iTunes or Apple Devices from the Microsoft Store is installed, FlekPair asks 
 ### Good to know
 
 - macOS may ask once whether FlekPair can access your Downloads folder. If you decline, the file is saved to FlekPair's own data folder instead and shown there.
-- Builds are not notarized by Apple or signed for Windows unless you add signing secrets (see [Releasing](#releasing)). On macOS, open the app once through **System Settings → Privacy & Security → Open Anyway**; on Windows, choose **More info → Run anyway**.
+- Released Mac builds are signed and notarized by Apple, so macOS only asks once whether to open an app downloaded from the internet. The Windows installer is not signed, so Windows warns before the first launch; choose **More info → Run anyway**.
 - The interface follows the system language where a full translation exists (18 languages inherited from iloader) and is English otherwise.
 
 ## What is in the file
