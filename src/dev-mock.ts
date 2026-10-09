@@ -1,5 +1,5 @@
 // Fake backend for working on the UI in a browser, without the Tauri shell or a device.
-// Pick a scenario with ?mock=device|two|none|unnamed|error|denied|nousbmuxd|stuck, or with
+// Pick a scenario with ?mock=device|wifi|two|none|unnamed|error|denied|nousbmuxd|stuck, or with
 // &platform=windows one of nodriver|driverfail|driverstopped|storeapp
 import { mockIPC } from "@tauri-apps/api/mocks";
 
@@ -10,6 +10,7 @@ const iphone = {
   name: "Alex’s iPhone",
   version: "18.5",
   deviceClass: "iPhone",
+  link: "usb",
 };
 const ipad = {
   // Devices older than the iPhone XS report the longer, undashed form.
@@ -17,10 +18,12 @@ const ipad = {
   name: "Studio iPad Pro",
   version: "17.2",
   deviceClass: "iPad",
+  link: "usb",
 };
 
 const devices = {
   none: [],
+  wifi: [{ ...iphone, link: "network" }],
   two: [iphone, ipad],
   unnamed: [{ ...iphone, name: "", version: "", deviceClass: "" }],
 }[scenario] ?? [iphone];

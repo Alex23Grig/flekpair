@@ -18,9 +18,15 @@ FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) w
 
 The file lands in your Downloads folder as `pairingFile.plist` and is selected in Finder or Explorer. An existing file is never replaced: a second one is saved as `pairingFile (1).plist`.
 
-Only devices connected by cable are listed. With more than one connected, pick the device from the list above the button.
+With more than one device connected, pick the one you want from the list above the button.
 
 The device's UDID is shown under its name as soon as it is plugged in, before it is trusted. Click it to copy.
+
+### Without a cable (macOS)
+
+On a Mac, a device that has trusted this computer before can be used over Wi-Fi. It shows up marked **Wi-Fi** when both are on the same network and **Show this iPhone when on Wi-Fi** is turned on for it in Finder. The first connection, where you tap **Trust**, still needs a cable, and so does a device that has stopped trusting the computer. If the device doesn't show up, wake and unlock it; a sleeping device often drops off the list.
+
+If a device is both plugged in and on Wi-Fi, FlekPair uses the cable. On Windows only cabled devices are listed.
 
 ### Windows: Apple's driver
 

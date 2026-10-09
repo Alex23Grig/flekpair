@@ -13,6 +13,7 @@ type DeviceInfo = {
   name: string;
   version: string;
   deviceClass: string;
+  link: "usb" | "network";
 };
 
 type ExportedPairing = {
@@ -251,7 +252,7 @@ function App() {
                 {[
                   selected.version &&
                     `${osName(selected.deviceClass)} ${selected.version}`,
-                  "USB",
+                  selected.link === "network" ? "Wi-Fi" : "USB",
                 ]
                   .filter(Boolean)
                   .join(" · ")}

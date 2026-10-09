@@ -23,7 +23,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 use crate::{
-    device::{LABEL, get_provider, get_usbmuxd, string_value},
+    device::{LABEL, Link, get_provider, get_usbmuxd, string_value},
     error::{AppError, chain},
 };
 
@@ -124,9 +124,9 @@ pub fn reveal_pairing_file(app: AppHandle, last: State<'_, LastExport>) -> Resul
 }
 
 async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> {
-    let provider = get_provider(udid).await?;
+    let (provider, link) = get_provider(udid).await?;
 
-    let (record, mut lockdown) = trusted_session(&provider, udid).await?;
+    let (record, mut lockdown) = trusted_session(&provider, udid, link).await?;
 
     lockdown
         .set_value(
@@ -166,6 +166,7 @@ async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> 
 async fn trusted_session(
     provider: &UsbmuxdProvider,
     udid: &str,
+    link: Link,
 ) -> Result<(PairingFile, LockdownClient), AppError> {
     match get_usbmuxd().await?.get_pair_record(udid).await {
         Ok(record) => {
@@ -184,6 +185,14 @@ async fn trusted_session(
             }
         }
         Err(e) => info!("No pairing record for device {udid}: {}", chain(&e)),
+    }
+
+    // The trust prompt only comes up over a cable.
+    if link == Link::Network {
+        return Err(AppError::LockdownPairing(
+            "The device no longer trusts this computer".into(),
+            "connect it with a cable to pair again".into(),
+        ));
     }
 
     let record = pair(provider, udid).await?;
