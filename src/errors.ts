@@ -6,7 +6,7 @@ export const errorSuggestionKeys = {
     "error.suggestions.device_coms",
     "error.suggestions.trust",
   ],
-  no_device: ["error.suggestions.device_coms", "error.suggestions.wifi"],
+  no_device: ["error.suggestions.device_coms"],
   device_coms: ["error.suggestions.device_coms", "error.suggestions.trust"],
   lockdown_pairing: ["error.suggestions.trust", "error.suggestions.pairing"],
   remote_pairing: ["error.suggestions.trust", "error.suggestions.pairing"],

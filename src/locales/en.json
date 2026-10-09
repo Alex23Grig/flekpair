@@ -11,6 +11,7 @@
   "device": {
     "title": "iDevice",
     "no_devices_found_period": "No devices found.",
+    "wifi_hint": "Connected this device to this {{computer}} before? If both are on the same network, unlock it and it should appear here. If it doesn't, connect it with a cable as usual.",
     "unable_load_devices_prefix": "Unable to load devices",
     "pairing_in_progress_header": "Pairing with {{device}}...",
     "pairing_in_progress_hint": "Please unlock your device and click \"Trust,\" then enter your passcode if prompted.",
@@ -60,10 +61,6 @@
       "device_coms": [
         "Ensure your device is properly connected to your computer.",
         "Unplug and reconnect the device. If the issue persists, try a different USB port and cable."
-      ],
-      "wifi": [
-        "[platform::mac]To use Wi-Fi instead, wake and unlock a device that already trusts this Mac and keep it on the same network. It can take a minute or two to show up.",
-        "[platform::windows]To use Wi-Fi instead, wake and unlock a device that already trusts this PC and keep it on the same network. It can take a minute or two to show up."
       ],
       "misc": [
         "Try again. Restarting the app, your computer, and/or your phone may also help."

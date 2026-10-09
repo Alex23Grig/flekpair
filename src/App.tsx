@@ -47,6 +47,9 @@ const COPIED_NOTICE_MS = 1500;
 
 const SOURCE_URL = "https://github.com/Alex23Grig/flekpair";
 
+// Where a device that has trusted the computer before can be used without a cable.
+const WIRELESS = platform === "mac" || platform === "windows";
+
 const osName = (deviceClass: string) => {
   if (deviceClass === "iPad") return "iPadOS";
   if (deviceClass === "AppleTV") return "tvOS";
@@ -300,6 +303,13 @@ function App() {
             <p className="device-empty-title">
               {t("device.no_devices_found_period")}
             </p>
+            {WIRELESS && (
+              <p className="device-wifi-hint">
+                {t("device.wifi_hint", {
+                  computer: platform === "mac" ? "Mac" : "PC",
+                })}
+              </p>
+            )}
             <Suggestions items={getErrorSuggestions(t, "no_device")} />
             {search && search.recognised === 0 && (
               <p className="device-search">
