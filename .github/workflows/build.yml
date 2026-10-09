@@ -80,19 +80,83 @@ jobs:
 
       - name: Notarize & Staple DMG (release only)
         if: matrix.platform == 'macos-latest' && env.HAVE_NOTARIZE_SECRETS == 'true' && github.event_name == 'release'
+        env:
+          NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+          NOTARIZE_PASSWORD: ${{ secrets.NOTARIZE_APP_SPECIFIC_PASS }}
+          NOTARIZE_TEAM_ID: ${{ secrets.NOTARIZE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          # The name the Build step gave the installer on the release.
+          RELEASE_ASSET: FlekPair-darwin-universal.dmg
+          # Apple usually answers in minutes, but can hold a submission for days. The job itself
+          # is stopped after six hours, so stop waiting before that.
+          WAIT_LIMIT_SECONDS: 18000
         run: |
           DMG_PATH=$(find src-tauri/target -name "*.dmg" -print -quit)
           if [ -z "$DMG_PATH" ]; then
             echo "No DMG found to notarize" >&2
             exit 1
           fi
+
+          notary() {
+            xcrun notarytool "$@" \
+              --apple-id "$NOTARIZE_APPLE_ID" \
+              --password "$NOTARIZE_PASSWORD" \
+              --team-id "$NOTARIZE_TEAM_ID"
+          }
+
           echo "Submitting $DMG_PATH to Apple notarization…"
-          xcrun notarytool submit "$DMG_PATH" \
-            --apple-id "${{ secrets.NOTARIZE_APPLE_ID }}" \
-            --password "${{ secrets.NOTARIZE_APP_SPECIFIC_PASS }}" \
-            --team-id "${{ secrets.NOTARIZE_TEAM_ID }}" \
-            --wait --verbose
-          xcrun stapler staple "$DMG_PATH"
+          SUBMISSION=""
+          for attempt in 1 2 3 4 5; do
+            SUBMISSION=$(notary submit "$DMG_PATH" --output-format json | jq -r '.id // empty') || SUBMISSION=""
+            [ -n "$SUBMISSION" ] && break
+            echo "Submission attempt $attempt failed, trying again…"
+            sleep 30
+          done
+          if [ -z "$SUBMISSION" ]; then
+            echo "Could not submit to Apple notarization" >&2
+            exit 1
+          fi
+          echo "Submission ID: $SUBMISSION"
+
+          # Ask for the status ourselves instead of using --wait, which gives up on the first
+          # network error. An empty answer is such an error and is simply asked again.
+          STARTED=$SECONDS
+          while true; do
+            STATUS=$(notary info "$SUBMISSION" --output-format json 2>/dev/null | jq -r '.status // empty') || STATUS=""
+            case "$STATUS" in
+              Accepted)
+                break
+                ;;
+              "In Progress" | "")
+                if [ $((SECONDS - STARTED)) -ge "$WAIT_LIMIT_SECONDS" ]; then
+                  echo "::warning::Apple is still checking submission $SUBMISSION. The installer on the release is the file being checked, so macOS will accept it once Apple approves; it only lacks the stapled ticket."
+                  exit 0
+                fi
+                sleep 60
+                ;;
+              *)
+                echo "Apple answered: $STATUS" >&2
+                notary log "$SUBMISSION" || true
+                exit 1
+                ;;
+            esac
+          done
+
+          # The ticket can take a moment to become available after approval.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            xcrun stapler staple "$DMG_PATH" && break
+            if [ "$attempt" = 10 ]; then
+              echo "Could not staple the approved installer" >&2
+              exit 1
+            fi
+            sleep 30
+          done
+
+          # The Build step published the installer before it was approved. Replace it with the
+          # stapled one, which also opens on a Mac that is offline.
+          cp "$DMG_PATH" "$RUNNER_TEMP/$RELEASE_ASSET"
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/$RELEASE_ASSET" --clobber --repo "$GITHUB_REPOSITORY"
 
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v7
