@@ -38,6 +38,12 @@ uuid = { version = "1", features = ["v4"] }
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "system-proxy"] }
 cab = "0.6.0"
 
+# Apple's symbols, which only macOS can draw. Tauri builds on the same crates.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.4"
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSImage", "NSImageRep", "NSBitmapImageRep", "NSFontDescriptor", "objc2-core-foundation"] }
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSData", "NSDictionary", "NSString"] }
+
 [dev-dependencies]
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "system-proxy"] }
 cab = "0.6.0"

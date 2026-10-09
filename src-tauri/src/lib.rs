@@ -2,18 +2,22 @@ mod apple_driver;
 mod device;
 mod error;
 mod pairing;
+mod symbol;
 
 use crate::{
     apple_driver::{
         DriverSetup, apple_driver_progress, apple_driver_state, cancel_apple_driver,
         install_apple_driver,
     },
-    device::{DeviceCache, list_devices},
+    device::{DeviceCache, KeepAwake, list_devices},
     pairing::{
         LastExport, PairingCancelToken, RemotePairings, cancel_pairing, export_pairing_file,
         reveal_pairing_file,
     },
+    symbol::system_symbol,
 };
+
+use tauri::{Manager, WindowEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,6 +26,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(DeviceCache::default())
+        .manage(KeepAwake::default())
         .manage(PairingCancelToken::default())
         .manage(RemotePairings::default())
         .manage(LastExport::default())
@@ -35,7 +40,13 @@ pub fn run() {
             apple_driver_progress,
             install_apple_driver,
             cancel_apple_driver,
+            system_symbol,
         ])
+        .on_window_event(|window, event| {
+            if let WindowEvent::Focused(true) = event {
+                window.state::<KeepAwake>().extend();
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

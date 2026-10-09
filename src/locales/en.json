@@ -59,6 +59,9 @@
         "Ensure your device is properly connected to your computer.",
         "Unplug and reconnect the device. If the issue persists, try a different USB port and cable."
       ],
+      "wifi": [
+        "[platform::mac]To use Wi-Fi instead, wake and unlock a device that already trusts this Mac and keep it on the same network. It can take a minute or two to show up."
+      ],
       "misc": [
         "Try again. Restarting the app, your computer, and/or your phone may also help."
       ],
