@@ -1,4 +1,8 @@
-use std::{collections::HashMap, sync::Mutex, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::Mutex,
+    time::{Duration, Instant},
+};
 
 use idevice::{
     IdeviceError, IdeviceService,
@@ -20,6 +24,13 @@ const DESCRIBE_TIMEOUT: Duration = Duration::from_secs(4);
 /// macOS shows a device over Wi-Fi once it has trusted the computer by cable and Wi-Fi syncing
 /// is on. Windows can too, but nothing here has been tried there.
 const WIRELESS: bool = cfg!(target_os = "macos");
+
+/// How often a device held on Wi-Fi is asked something, so its session counts as in use.
+const KEEP_AWAKE_EVERY: Duration = Duration::from_secs(4);
+
+/// How long devices on Wi-Fi are kept awake after the app was last used. Past that it has most
+/// likely been left open, and a phone shouldn't lose battery to it.
+const KEEP_AWAKE_FOR: Duration = Duration::from_secs(10 * 60);
 
 /// How a device is reached.
 #[derive(Serialize, Clone, Copy, PartialEq, Default, Debug)]
@@ -44,28 +55,86 @@ pub struct DeviceInfo {
 /// Devices that have been fully described, so polling doesn't reopen lockdown for them.
 pub type DeviceCache = Mutex<HashMap<String, DeviceInfo>>;
 
+/// Lockdown sessions kept open to devices on Wi-Fi.
+///
+/// Left alone, a phone drops off the network within a minute and comes back seconds or minutes
+/// later, so it would come and go in the list and an export could find it gone. It stays for as
+/// long as a session with it is in use.
+pub struct KeepAwake {
+    until: Mutex<Instant>,
+    sessions: Mutex<HashMap<String, Session>>,
+}
+
+struct Session {
+    device_id: u32,
+    /// `None` while the device isn't answering.
+    lockdown: Option<LockdownClient>,
+    /// When to use the session next, or to try opening it again.
+    due: Instant,
+}
+
+impl Default for KeepAwake {
+    fn default() -> Self {
+        Self {
+            until: Mutex::new(Instant::now() + KEEP_AWAKE_FOR),
+            sessions: Mutex::default(),
+        }
+    }
+}
+
+impl KeepAwake {
+    /// Called when the app is used: brought to the front, or asked to export.
+    pub fn extend(&self) {
+        *self.until.lock().unwrap() = Instant::now() + KEEP_AWAKE_FOR;
+    }
+
+    fn wanted_at(&self, time: Instant) -> bool {
+        time < *self.until.lock().unwrap()
+    }
+}
+
 /// Lists devices on a cable and, on macOS, ones seen over Wi-Fi.
 #[tauri::command]
-pub async fn list_devices(cache: State<'_, DeviceCache>) -> Result<Vec<DeviceInfo>, AppError> {
+pub async fn list_devices(
+    cache: State<'_, DeviceCache>,
+    awake: State<'_, KeepAwake>,
+) -> Result<Vec<DeviceInfo>, AppError> {
     let addr = usbmuxd_addr()?;
     let devices = devices().await?;
     let known = cache.lock().unwrap().clone();
+    let keep_awake = awake.wanted_at(Instant::now());
+    // Sessions left in here are with devices that are no longer listed, and end with this call.
+    let mut sessions = std::mem::take(&mut *awake.sessions.lock().unwrap());
 
-    let infos = futures::future::join_all(devices.iter().map(|(device, link)| {
+    let looked = futures::future::join_all(devices.iter().map(|(device, link)| {
         let cached = known.get(&device.udid).cloned();
+        let session = sessions.remove(&device.udid);
         let addr = addr.clone();
         async move {
-            match cached {
-                // The details hold whichever way the device is reached now.
-                Some(info) => DeviceInfo {
-                    link: *link,
-                    ..info
-                },
-                None => describe(device, *link, addr).await,
+            if *link == Link::Network && keep_awake {
+                let (info, session) = held(device, addr, cached, session).await;
+                (info, Some(session))
+            } else {
+                let info = match cached {
+                    // The details hold whichever way the device is reached now.
+                    Some(info) => DeviceInfo {
+                        link: *link,
+                        ..info
+                    },
+                    None => describe(device, *link, addr).await.0,
+                };
+                (info, None)
             }
         }
     }))
     .await;
+
+    let (infos, sessions): (Vec<_>, Vec<_>) = looked.into_iter().unzip();
+    *awake.sessions.lock().unwrap() = infos
+        .iter()
+        .zip(sessions)
+        .filter_map(|(info, session)| Some((info.udid.clone(), session?)))
+        .collect();
 
     *cache.lock().unwrap() = infos
         .iter()
@@ -76,11 +145,71 @@ pub async fn list_devices(cache: State<'_, DeviceCache>) -> Result<Vec<DeviceInf
     Ok(infos)
 }
 
-async fn describe(device: &UsbmuxdDevice, link: Link, addr: UsbmuxdAddr) -> DeviceInfo {
+/// What is known about a device on Wi-Fi, and the session that keeps it there.
+async fn held(
+    device: &UsbmuxdDevice,
+    addr: UsbmuxdAddr,
+    cached: Option<DeviceInfo>,
+    session: Option<Session>,
+) -> (DeviceInfo, Session) {
+    let mut session = session
+        // usbmuxd lists a device that came back under a new id, and connections made through
+        // the old one are dead.
+        .filter(|session| session.device_id == device.device_id)
+        .unwrap_or_else(|| Session {
+            device_id: device.device_id,
+            lockdown: None,
+            due: Instant::now(),
+        });
+    let known = cached.map(|info| DeviceInfo {
+        link: Link::Network,
+        ..info
+    });
+    let unnamed = || DeviceInfo {
+        udid: device.udid.clone(),
+        link: Link::Network,
+        ..Default::default()
+    };
+
+    if Instant::now() < session.due {
+        return (known.unwrap_or_else(unnamed), session);
+    }
+
+    let info = match session.lockdown.as_mut() {
+        Some(lockdown) => {
+            let asked =
+                tokio::time::timeout(DESCRIBE_TIMEOUT, string_value(lockdown, "DeviceName")).await;
+            if !matches!(asked, Ok(Ok(_))) {
+                debug!("{} stopped answering over Wi-Fi", device.udid);
+                session.lockdown = None;
+            }
+            known
+        }
+        None => {
+            let (info, lockdown) = describe(device, Link::Network, addr).await;
+            session.lockdown = lockdown;
+            // A device that isn't answering keeps the details it gave earlier.
+            match session.lockdown {
+                Some(_) => Some(info),
+                None => known.or(Some(info)),
+            }
+        }
+    };
+    session.due = Instant::now() + KEEP_AWAKE_EVERY;
+
+    (info.unwrap_or_else(unnamed), session)
+}
+
+/// The device's details, and the lockdown connection they were read over if it answered.
+async fn describe(
+    device: &UsbmuxdDevice,
+    link: Link,
+    addr: UsbmuxdAddr,
+) -> (DeviceInfo, Option<LockdownClient>) {
     let provider = device.to_provider(addr, LABEL);
-    let (name, version, device_class) =
+    let (lockdown, (name, version, device_class)) =
         match tokio::time::timeout(DESCRIBE_TIMEOUT, ask(&provider, link)).await {
-            Ok(Ok(described)) => described,
+            Ok(Ok((lockdown, described))) => (Some(lockdown), described),
             Ok(Err(e)) => {
                 debug!("No details for {}: {}", device.udid, chain(&e));
                 Default::default()
@@ -91,19 +220,20 @@ async fn describe(device: &UsbmuxdDevice, link: Link, addr: UsbmuxdAddr) -> Devi
             }
         };
 
-    DeviceInfo {
+    let info = DeviceInfo {
         udid: device.udid.clone(),
         name,
         version,
         device_class,
         link,
-    }
+    };
+    (info, lockdown)
 }
 
 async fn ask(
     provider: &UsbmuxdProvider,
     link: Link,
-) -> Result<(String, String, String), IdeviceError> {
+) -> Result<(LockdownClient, (String, String, String)), IdeviceError> {
     let mut lockdown = LockdownClient::connect(provider).await?;
     // Over Wi-Fi lockdown only talks inside a session, which the record from the earlier cable
     // pairing opens.
@@ -121,7 +251,7 @@ async fn ask(
         .await
         .unwrap_or_default();
 
-    Ok((name, version, device_class))
+    Ok((lockdown, (name, version, device_class)))
 }
 
 pub async fn string_value(
@@ -243,5 +373,19 @@ mod tests {
                 ("old".to_string(), 5, Link::Usb),
             ]
         );
+    }
+
+    #[test]
+    fn keeps_devices_awake_only_for_a_while_after_the_app_was_used() {
+        let awake = KeepAwake::default();
+        let opened = Instant::now();
+        let later = opened + KEEP_AWAKE_FOR + Duration::from_secs(1);
+
+        assert!(awake.wanted_at(opened));
+        assert!(!awake.wanted_at(later));
+
+        awake.extend();
+        assert!(awake.wanted_at(later - Duration::from_secs(2)));
+        assert!(!awake.wanted_at(later + KEEP_AWAKE_FOR));
     }
 }

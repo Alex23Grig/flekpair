@@ -23,7 +23,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 use crate::{
-    device::{LABEL, Link, get_provider, get_usbmuxd, string_value},
+    device::{KeepAwake, LABEL, Link, get_provider, get_usbmuxd, string_value},
     error::{AppError, chain},
 };
 
@@ -67,8 +67,11 @@ pub struct ExportedPairing {
 pub async fn export_pairing_file(
     app: AppHandle,
     cancel_state: State<'_, PairingCancelToken>,
+    awake: State<'_, KeepAwake>,
     udid: String,
 ) -> Result<ExportedPairing, AppError> {
+    awake.extend();
+
     let token = CancellationToken::new();
     {
         let mut guard = cancel_state.lock().unwrap();
@@ -81,6 +84,8 @@ pub async fn export_pairing_file(
         _ = token.cancelled() => Err(AppError::Canceled("Pairing".into())),
         res = pairing_file(&app, &udid) => res,
     };
+    // Answering the trust prompt can take a while, and the device should still be there after.
+    awake.extend();
 
     if !token.is_cancelled() {
         let mut guard = cancel_state.lock().unwrap();

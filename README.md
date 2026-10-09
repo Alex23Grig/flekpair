@@ -24,7 +24,9 @@ The device's UDID is shown under its name as soon as it is plugged in, before it
 
 ### Without a cable (macOS)
 
-On a Mac, a device that has trusted this computer before can be used over Wi-Fi. It shows up marked **Wi-Fi** when both are on the same network and **Show this iPhone when on Wi-Fi** is turned on for it in Finder. The first connection, where you tap **Trust**, still needs a cable, and so does a device that has stopped trusting the computer. If the device doesn't show up, wake and unlock it; a sleeping device often drops off the list.
+On a Mac, a device that has trusted this computer before can be used over Wi-Fi. It shows up marked **Wi-Fi** when both are on the same network and **Show this iPhone when on Wi-Fi** is turned on for it in Finder. The first connection, where you tap **Trust**, still needs a cable, and so does a device that has stopped trusting the computer.
+
+A phone that nothing is talking to drops off the network within a minute. If yours doesn't show up, wake and unlock it, and give macOS a minute or two after the phone joins the network. Once FlekPair sees the phone it keeps a connection to it open, so it stays listed. It stops doing that ten minutes after you last used FlekPair, so that an app left open doesn't keep a phone awake.
 
 If a device is both plugged in and on Wi-Fi, FlekPair uses the cable. On Windows only cabled devices are listed.
 

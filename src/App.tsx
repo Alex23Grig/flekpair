@@ -225,7 +225,7 @@ function App() {
             <p className="device-empty-title">
               {t("device.no_devices_found_period")}
             </p>
-            <Suggestions items={getErrorSuggestions(t, "device_coms")} />
+            <Suggestions items={getErrorSuggestions(t, "no_device")} />
           </>
         ) : (
           <div className="device-row">
