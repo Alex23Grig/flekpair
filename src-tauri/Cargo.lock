@@ -1292,7 +1292,7 @@ dependencies = [
 
 [[package]]
 name = "flekpair"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "cab",
  "futures",
