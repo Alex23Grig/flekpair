@@ -22,8 +22,9 @@ pub const LABEL: &str = "FlekPair";
 const DESCRIBE_TIMEOUT: Duration = Duration::from_secs(4);
 
 /// macOS shows a device over Wi-Fi once it has trusted the computer by cable and Wi-Fi syncing
-/// is on. Windows can too, but nothing here has been tried there.
-const WIRELESS: bool = cfg!(target_os = "macos");
+/// is on. Apple's service on Windows does too when Bonjour is installed, which comes with
+/// iTunes and not with the driver alone.
+const WIRELESS: bool = cfg!(any(target_os = "macos", windows));
 
 /// How often a device held on Wi-Fi is asked something, so its session counts as in use.
 const KEEP_AWAKE_EVERY: Duration = Duration::from_secs(4);
