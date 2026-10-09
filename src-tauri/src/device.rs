@@ -459,7 +459,10 @@ mod tests {
             let mut found = None;
             for _ in 0..40 {
                 nearby.look().await;
-                found = nearby.found().into_iter().find(|(found, ..)| *found == udid);
+                found = nearby
+                    .found()
+                    .into_iter()
+                    .find(|(found, ..)| *found == udid);
                 if found.is_some() {
                     break;
                 }
@@ -473,7 +476,10 @@ mod tests {
             };
 
             let (info, session) = held(&device, None, None).await;
-            assert!(session.lockdown.is_some(), "no session straight to the device");
+            assert!(
+                session.lockdown.is_some(),
+                "no session straight to the device"
+            );
             assert!(!info.name.is_empty() && !info.version.is_empty());
 
             // The session is used again once it is due, and still answers then.
