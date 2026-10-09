@@ -186,6 +186,15 @@ select.device-name:disabled {
   height: 0.9rem;
 }
 
+/* One of the system's own symbols, in the colour of the text around it. */
+.symbol {
+  flex: none;
+  height: 1rem;
+  background-color: currentColor;
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
+}
+
 .device-udid {
   align-self: flex-start;
   display: flex;

@@ -2,6 +2,7 @@ mod apple_driver;
 mod device;
 mod error;
 mod pairing;
+mod symbol;
 
 use crate::{
     apple_driver::{
@@ -13,6 +14,7 @@ use crate::{
         LastExport, PairingCancelToken, RemotePairings, cancel_pairing, export_pairing_file,
         reveal_pairing_file,
     },
+    symbol::system_symbol,
 };
 
 use tauri::{Manager, WindowEvent};
@@ -38,6 +40,7 @@ pub fn run() {
             apple_driver_progress,
             install_apple_driver,
             cancel_apple_driver,
+            system_symbol,
         ])
         .on_window_event(|window, event| {
             if let WindowEvent::Focused(true) = event {

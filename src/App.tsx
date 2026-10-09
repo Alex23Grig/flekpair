@@ -16,6 +16,12 @@ type DeviceInfo = {
   link: "usb" | "network";
 };
 
+// One of the system's own symbols, as an image whose opaque part is its shape.
+type SystemSymbol = {
+  url: string;
+  ratio: number;
+};
+
 type ExportedPairing = {
   path: string;
   fileName: string;
@@ -87,31 +93,48 @@ const CopyGlyph = ({ done }: { done: boolean }) => (
   </svg>
 );
 
-const LinkGlyph = ({ link }: { link: DeviceInfo["link"] }) => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    {link === "network" ? (
-      <>
-        <path d="M1.8 6.3a9.2 9.2 0 0 1 12.4 0" />
-        <path d="M4.3 9a5.5 5.5 0 0 1 7.4 0" />
-        <path d="M8 12h.01" />
-      </>
-    ) : (
-      <>
-        <path d="M6 1.8v2.7M10 1.8v2.7" />
-        <path d="M4.2 4.5h7.6v2.7a3.8 3.8 0 0 1-7.6 0z" />
-        <path d="M8 11v3.2" />
-      </>
-    )}
-  </svg>
-);
+const LinkGlyph = ({
+  link,
+  cable,
+}: {
+  link: DeviceInfo["link"];
+  cable: SystemSymbol | null;
+}) =>
+  link === "usb" && cable ? (
+    <span
+      className="symbol"
+      style={{
+        aspectRatio: cable.ratio,
+        maskImage: `url(${cable.url})`,
+        WebkitMaskImage: `url(${cable.url})`,
+      }}
+      aria-hidden="true"
+    />
+  ) : (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {link === "network" ? (
+        <>
+          <path d="M1.8 6.3a9.2 9.2 0 0 1 12.4 0" />
+          <path d="M4.3 9a5.5 5.5 0 0 1 7.4 0" />
+          <path d="M8 12h.01" />
+        </>
+      ) : (
+        <>
+          <path d="M6 1.8v2.7M10 1.8v2.7" />
+          <path d="M4.2 4.5h7.6v2.7a3.8 3.8 0 0 1-7.6 0z" />
+          <path d="M8 11v3.2" />
+        </>
+      )}
+    </svg>
+  );
 
 function App() {
   const { t } = useTranslation();
@@ -125,11 +148,28 @@ function App() {
   const [copied, setCopied] = useState(false);
   const [copiedUdid, setCopiedUdid] = useState<string | null>(null);
   const [version, setVersion] = useState("");
+  // Apple's symbol for a cable. Only macOS has it; elsewhere the drawn plug stays.
+  const [cableSymbol, setCableSymbol] = useState<SystemSymbol | null>(null);
 
   useEffect(() => {
     getVersion()
       .then(setVersion)
       .catch((e) => console.error("Failed to get app version", e));
+  }, []);
+
+  useEffect(() => {
+    invoke<number[] | null>("system_symbol", { name: "cable.connector" })
+      .then((png) => {
+        if (!png) return;
+        const bytes = new Uint8Array(png);
+        // A PNG states its width and height right after its signature.
+        const header = new DataView(bytes.buffer);
+        setCableSymbol({
+          url: URL.createObjectURL(new Blob([bytes], { type: "image/png" })),
+          ratio: header.getUint32(16) / header.getUint32(20),
+        });
+      })
+      .catch((e) => console.error("Failed to get the cable symbol", e));
   }, []);
 
   useEffect(() => {
@@ -276,7 +316,7 @@ function App() {
               )}
               <span className="device-meta">
                 <span className="device-link">
-                  <LinkGlyph link={selected.link} />
+                  <LinkGlyph link={selected.link} cable={cableSymbol} />
                   {selected.link === "network" ? "Wi-Fi" : "USB"}
                 </span>
                 {selected.version &&

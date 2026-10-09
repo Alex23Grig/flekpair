@@ -80,6 +80,9 @@ mockIPC(async (cmd) => {
   switch (cmd) {
     case "plugin:app|version":
       return "1.0.0";
+    // Apple's symbols come from macOS itself, so a browser shows the drawn ones.
+    case "system_symbol":
+      return null;
     case "list_devices":
       if (!driverReady) {
         throw {
