@@ -3,6 +3,7 @@ mod device;
 mod error;
 mod nearby;
 mod pairing;
+mod send;
 mod symbol;
 
 use crate::{
@@ -16,6 +17,7 @@ use crate::{
         LastExport, PairingCancelToken, RemotePairings, cancel_pairing, export_pairing_file,
         reveal_pairing_file,
     },
+    send::{can_send, send_pairing_file},
     symbol::system_symbol,
 };
 
@@ -46,6 +48,8 @@ pub fn run() {
             cancel_apple_driver,
             system_symbol,
             network_search,
+            send_pairing_file,
+            can_send,
         ])
         .setup(|app| {
             if nearby::ENABLED {

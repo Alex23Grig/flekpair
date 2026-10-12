@@ -14,6 +14,7 @@ export const errorSuggestionKeys = {
   canceled: [],
   filesystem: ["error.suggestions.filesystem"],
   driver: [],
+  upload: ["error.suggestions.upload"],
   misc: ["error.suggestions.misc"],
 } as const;
 

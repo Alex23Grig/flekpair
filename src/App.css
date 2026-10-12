@@ -1,12 +1,8 @@
 :root {
   color-scheme: light dark;
   font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI Variable Text",
-    "Segoe UI",
-    "Inter",
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI",
+    "Inter", sans-serif;
   font-size: 15px;
   line-height: 1.45;
   font-weight: 400;
@@ -438,6 +434,13 @@ button:disabled {
   color: var(--text-muted);
 }
 
+.actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .text-button {
   align-self: center;
   padding: 0.3rem 0.7rem;
@@ -455,7 +458,11 @@ button:disabled {
   }
 }
 
-.text-button:hover {
+.text-button:disabled {
+  opacity: 0.45;
+}
+
+.text-button:hover:not(:disabled) {
   background: var(--inset);
 }
 

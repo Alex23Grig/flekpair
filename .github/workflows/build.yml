@@ -69,10 +69,24 @@ jobs:
           echo "APPLE_SIGNING_IDENTITY=${{ secrets.DEV_IDENTITY_NAME }}" >> $GITHUB_ENV
           echo "APPLE_TEAM_ID=${{ secrets.NOTARIZE_TEAM_ID }}" >> $GITHUB_ENV
 
+      - name: Check the upload server is set (release only)
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          FLEKPAIR_SERVER: ${{ secrets.PAIRING_SERVER }}
+        run: |
+          if [ -z "$FLEKPAIR_SERVER" ]; then
+            echo "::error::The PAIRING_SERVER secret is not set, so the released app could not upload pairing files."
+            exit 1
+          fi
+
       - name: Build
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Where the app uploads pairing files: compiled in, see send.rs. It is a secret so
+          # that these logs don't print it; a build without it only saves the file.
+          FLEKPAIR_SERVER: ${{ secrets.PAIRING_SERVER }}
         with:
           args: ${{ matrix.args }}
           releaseId: ${{ github.event_name == 'release' && github.event.release.id || '' }}

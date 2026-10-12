@@ -42,6 +42,11 @@
     "pairing_file_exported_success": "Pairing file exported successfully!",
     "failed_export_pairing_file": "Failed to export pairing file"
   },
+  "send": {
+    "uploaded": "Pairing file uploaded",
+    "instructions": "Open FlekDeck on the device and tap Refresh to receive it.",
+    "save_instead": "Save to Downloads instead"
+  },
   "error": {
     "suggestions_heading": "Suggestions",
     "suggestions": {
@@ -67,6 +72,9 @@
       ],
       "filesystem": [
         "Make sure FlekPair has permission to read and write files on your system."
+      ],
+      "upload": [
+        "Check that this computer is connected to the internet, then try again."
       ]
     }
   }

@@ -21,6 +21,8 @@ pub enum AppError {
     Filesystem(String, String),
     #[error("{0}: {1}")]
     Driver(String, String),
+    #[error("{0}: {1}")]
+    Upload(String, String),
 }
 
 impl AppError {
@@ -36,6 +38,7 @@ impl AppError {
             AppError::Canceled(_) => "canceled",
             AppError::Filesystem(..) => "filesystem",
             AppError::Driver(..) => "driver",
+            AppError::Upload(..) => "upload",
         }
     }
 }

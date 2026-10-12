@@ -6,7 +6,7 @@ One-click pairing file exporter for iPhone and iPad, on macOS and Windows.
 
 ---
 
-Plug in your device, click **Export Pairing File**, and FlekPair saves `pairingFile.plist` to your Downloads folder and shows it to you. That is the whole app.
+Plug in your device, click **Export Pairing File**, and FlekPair uploads the device's pairing file for the FlekDeck app on it to collect. It can save the file to your Downloads folder instead. That is the whole app.
 
 FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) with everything except pairing-file export removed. It is not affiliated with or endorsed by iloader or its author.
 
@@ -15,8 +15,15 @@ FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) w
 1. Connect your iPhone or iPad with a USB cable and unlock it. The device must have a passcode set.
 2. Open FlekPair and click **Export Pairing File**.
 3. If the device asks, tap **Trust** and enter your passcode.
+4. When FlekPair says the file was uploaded, open FlekDeck on the device and tap **Refresh**.
 
-The file lands in your Downloads folder as `pairingFile.plist` and is selected in Finder or Explorer. An existing file is never replaced: a second one is saved as `pairingFile (1).plist`.
+The upload goes to FlekStore's server, under the device's UDID, and it is not encrypted. Read [what that means](#what-is-in-the-file) before using it for a device you care about.
+
+A build that was given no server to upload to has no upload: its button saves the file, as below.
+
+### Keeping the file on this computer
+
+**Save to Downloads instead**, under the button, uploads nothing. The file lands in your Downloads folder as `pairingFile.plist` and is selected in Finder or Explorer. An existing file is never replaced: a second one is saved as `pairingFile (1).plist`.
 
 With more than one device connected, pick the one you want from the list above the button.
 
@@ -59,7 +66,17 @@ The same combined pairing file iloader exports, for apps that ask for one, such 
 
 Exporting also turns on Wi-Fi debugging on the device (`EnableWifiDebugging`), as iloader does, which those apps rely on.
 
-**Treat the file like a password.** Whoever holds it can connect to your device. On macOS and Linux it is written readable by your user only.
+**Treat the file like a password.** Whoever holds it can connect to your device from the same network, with the standing of a computer you trusted.
+
+**Export Pairing File** uploads the file as it is to FlekStore's server. The server gives it to anyone who asks for the device's UDID, and a UDID is not a secret. **Save to Downloads instead** keeps the file on this computer; on macOS and Linux it is written readable by your user only.
+
+## How FlekDeck collects the file
+
+FlekPair sends `POST <server>/<UDID>` with the pairing file as the body. The server takes nothing but property lists.
+
+`GET` on the same address returns that file, or 404 when there is none. That is all FlekDeck's Refresh has to do.
+
+`<server>` is not written in this repository. It is given to a build in `FLEKPAIR_SERVER`, and FlekDeck has to be given the same one.
 
 ## Troubleshooting
 
@@ -76,7 +93,9 @@ For more detail, start FlekPair from a terminal with `FLEKPAIR_LOG=debug` to pri
 For development with hot reload: `npm run tauri dev`
 Make a production build: `npm run tauri build`
 
-To work on the interface without a device, run `npm run dev` and open <http://localhost:1420> in a browser. A stand-in backend takes over there; choose what it simulates with `?mock=device`, `wifi`, `two`, `mixed`, `none`, `unnamed`, `error`, `denied`, `nousbmuxd` or `stuck`, and the language with `&lng=ru`.
+Where pairing files are uploaded to is compiled in from the `FLEKPAIR_SERVER` environment variable, for example `FLEKPAIR_SERVER=https://files.example.com/pairing-files npm run tauri build`. Without it the build says so in a warning, and the app only saves the file.
+
+To work on the interface without a device, run `npm run dev` and open <http://localhost:1420> in a browser. A stand-in backend takes over there; choose what it simulates with `?mock=device`, `wifi`, `two`, `mixed`, `none`, `unnamed`, `error`, `denied`, `sendfail`, `nosend`, `nousbmuxd` or `stuck`, and the language with `&lng=ru`.
 
 The app icon is generated from `app-icon.svg`: `npm run tauri icon app-icon.svg`.
 
@@ -87,6 +106,8 @@ The app icon is generated from `app-icon.svg`: `npm run tauri icon app-icon.svg`
 ## Releasing
 
 Every push to `main` and every pull request builds a universal macOS `.dmg` and a Windows installer, downloadable from the workflow run. Publishing a GitHub release attaches them to that release.
+
+Released builds upload to the address in the `PAIRING_SERVER` repository secret, and a release fails to build without it. It is a secret rather than a variable only so that the public build logs don't print it; anyone with the app can still find it.
 
 macOS builds are signed with a Developer ID and notarized when these repository secrets exist: `DEV_ID_P12_BASE64`, `DEV_ID_P12_PASSWORD`, `DEV_IDENTITY_NAME`, `NOTARIZE_APPLE_ID`, `NOTARIZE_APP_SPECIFIC_PASS` and `NOTARIZE_TEAM_ID`. Without them the app is ad-hoc signed.
 
