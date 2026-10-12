@@ -36,6 +36,9 @@ type ExportedPairing = {
 type Phase =
   | { kind: "idle" }
   | { kind: "working"; udid: string; deviceName: string }
+  // Uploaded for FlekDeck on the device to collect.
+  | { kind: "sent"; udid: string }
+  // Saved on this computer instead.
   | { kind: "done"; udid: string; file: ExportedPairing }
   | { kind: "failed"; udid: string; error: AppError };
 
@@ -102,6 +105,20 @@ const CopyGlyph = ({ done }: { done: boolean }) => (
   </svg>
 );
 
+const Tick = () => (
+  <svg viewBox="0 0 20 20" aria-hidden="true">
+    <circle cx="10" cy="10" r="10" fill="currentColor" />
+    <path
+      d="M5.8 10.4l2.8 2.8 5.6-6"
+      fill="none"
+      stroke="var(--surface)"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const LinkGlyph = ({
   link,
   cable,
@@ -158,6 +175,8 @@ function App() {
   const [copied, setCopied] = useState(false);
   const [copiedUdid, setCopiedUdid] = useState<string | null>(null);
   const [version, setVersion] = useState("");
+  // Whether this build has a server to upload pairing files to. One without only saves them.
+  const [canSend, setCanSend] = useState(false);
   // Apple's symbol for a cable. Only macOS has it; elsewhere the drawn plug stays.
   const [cableSymbol, setCableSymbol] = useState<SystemSymbol | null>(null);
 
@@ -165,6 +184,9 @@ function App() {
     getVersion()
       .then(setVersion)
       .catch((e) => console.error("Failed to get app version", e));
+    invoke<boolean>("can_send")
+      .then(setCanSend)
+      .catch((e) => console.error("Failed to ask about uploading", e));
   }, []);
 
   useEffect(() => {
@@ -230,26 +252,36 @@ function App() {
     [t],
   );
 
-  const exportPairing = useCallback(async () => {
-    if (!selected || working) return;
-    const udid = selected.udid;
+  // Pairs with the device, then uploads its pairing file for FlekDeck to collect, or with
+  // `save` writes it to this computer instead.
+  const pair = useCallback(
+    async (save: boolean) => {
+      if (!selected || working) return;
+      const udid = selected.udid;
 
-    setCopied(false);
-    setPhase({ kind: "working", udid, deviceName: deviceName(selected) });
-    try {
-      const file = await invoke<ExportedPairing>("export_pairing_file", {
-        udid,
-      });
-      setPhase({ kind: "done", udid, file });
-    } catch (e) {
-      const error = toAppError(e);
-      setPhase(
-        error.type === "canceled"
-          ? { kind: "idle" }
-          : { kind: "failed", udid, error },
-      );
-    }
-  }, [selected, working, deviceName]);
+      setCopied(false);
+      setPhase({ kind: "working", udid, deviceName: deviceName(selected) });
+      try {
+        if (save) {
+          const file = await invoke<ExportedPairing>("export_pairing_file", {
+            udid,
+          });
+          setPhase({ kind: "done", udid, file });
+        } else {
+          await invoke("send_pairing_file", { udid });
+          setPhase({ kind: "sent", udid });
+        }
+      } catch (e) {
+        const error = toAppError(e);
+        setPhase(
+          error.type === "canceled"
+            ? { kind: "idle" }
+            : { kind: "failed", udid, error },
+        );
+      }
+    },
+    [selected, working, deviceName],
+  );
 
   useEffect(() => {
     if (!copiedUdid) return;
@@ -273,7 +305,9 @@ function App() {
 
   // A result stays up after the device is unplugged, but not once another one is picked.
   const result =
-    (phase.kind === "done" || phase.kind === "failed") &&
+    (phase.kind === "sent" ||
+      phase.kind === "done" ||
+      phase.kind === "failed") &&
     (!selected || selected.udid === phase.udid)
       ? phase
       : null;
@@ -293,9 +327,7 @@ function App() {
             <p className="device-empty-title">
               {t("device.unable_load_devices_prefix")}
             </p>
-            <Suggestions
-              items={getErrorSuggestions(t, devicesError.type)}
-            />
+            <Suggestions items={getErrorSuggestions(t, devicesError.type)} />
             <pre className="detail">{devicesError.message}</pre>
           </>
         ) : devices === null ? null : !selected ? (
@@ -369,14 +401,25 @@ function App() {
         )}
       </section>
 
-      <button
-        className="primary"
-        disabled={!selected || working}
-        onClick={exportPairing}
-      >
-        {working && <span className="spinner" aria-hidden="true" />}
-        {t("pairing.export_pairing_file")}
-      </button>
+      <div className="actions">
+        <button
+          className="primary"
+          disabled={!selected || working}
+          onClick={() => pair(!canSend)}
+        >
+          {working && <span className="spinner" aria-hidden="true" />}
+          {canSend ? t("send.button") : t("pairing.export_pairing_file")}
+        </button>
+        {canSend && (
+          <button
+            className="text-button"
+            disabled={!selected || working}
+            onClick={() => pair(true)}
+          >
+            {t("send.save_instead")}
+          </button>
+        )}
+      </div>
 
       <section className="status" aria-live="polite">
         {phase.kind === "working" && (
@@ -400,20 +443,20 @@ function App() {
           </div>
         )}
 
+        {result?.kind === "sent" && (
+          <div className="result">
+            <p className="result-title success">
+              <Tick />
+              {t("send.uploaded")}
+            </p>
+            <p>{t("send.instructions")}</p>
+          </div>
+        )}
+
         {result?.kind === "done" && (
           <div className="result">
             <p className="result-title success">
-              <svg viewBox="0 0 20 20" aria-hidden="true">
-                <circle cx="10" cy="10" r="10" fill="currentColor" />
-                <path
-                  d="M5.8 10.4l2.8 2.8 5.6-6"
-                  fill="none"
-                  stroke="var(--surface)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Tick />
               {t("pairing.pairing_file_exported_success")}
             </p>
             <button

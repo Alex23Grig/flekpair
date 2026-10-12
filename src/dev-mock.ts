@@ -1,5 +1,6 @@
 // Fake backend for working on the UI in a browser, without the Tauri shell or a device.
-// Pick a scenario with ?mock=device|wifi|two|mixed|none|unnamed|error|denied|nousbmuxd|stuck, or with
+// Pick a scenario with ?mock=device|wifi|two|mixed|none|unnamed|error|denied|sendfail|nosend|nousbmuxd|stuck,
+// or with
 // &platform=windows one of nodriver|driverfail|driverstopped|storeapp
 import { mockIPC } from "@tauri-apps/api/mocks";
 
@@ -106,6 +107,10 @@ mockIPC(async (cmd) => {
         };
       }
       return devices;
+    // A build that was given no server only saves the file.
+    case "can_send":
+      return scenario !== "nosend";
+    case "send_pairing_file":
     case "export_pairing_file":
       await wait(scenario === "stuck" ? 600_000 : 2500);
       if (scenario === "error") {
@@ -120,6 +125,16 @@ mockIPC(async (cmd) => {
           type: "trust_denied",
           message: "The trust prompt was declined on the device",
         };
+      }
+      if (cmd === "send_pairing_file") {
+        if (scenario === "sendfail") {
+          throw {
+            type: "upload",
+            message:
+              "Failed to upload the pairing file: error sending request for url (https://files.example.com/00008110-000A1C2E3F90801E): operation timed out",
+          };
+        }
+        return;
       }
       return {
         path: "/Users/alex/Downloads/pairingFile.plist",

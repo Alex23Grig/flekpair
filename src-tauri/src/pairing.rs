@@ -64,6 +64,7 @@ pub struct ExportedPairing {
 }
 
 /// Pairs with the device, writes its pairing file to the Downloads folder and shows it there.
+/// Nothing is uploaded.
 #[tauri::command]
 pub async fn export_pairing_file(
     app: AppHandle,
@@ -73,27 +74,11 @@ pub async fn export_pairing_file(
 ) -> Result<ExportedPairing, AppError> {
     awake.extend();
 
-    let token = CancellationToken::new();
-    {
-        let mut guard = cancel_state.lock().unwrap();
-        if let Some(old) = guard.replace(token.clone()) {
-            old.cancel();
-        }
-    }
-
-    let pairing_result = tokio::select! {
-        _ = token.cancelled() => Err(AppError::Canceled("Pairing".into())),
-        res = pairing_file(&app, &udid) => res,
-    };
+    let pairing = until_canceled(&cancel_state, pairing_file(&app, &udid)).await;
     // Answering the trust prompt can take a while, and the device should still be there after.
     awake.extend();
 
-    if !token.is_cancelled() {
-        let mut guard = cancel_state.lock().unwrap();
-        *guard = None;
-    }
-
-    let path = save(&app, pairing_result?)?;
+    let path = save(&app, pairing?)?;
 
     if let Err(e) = app.opener().reveal_item_in_dir(&path) {
         warn!("Failed to show {} in its folder: {}", path.display(), e);
@@ -107,6 +92,28 @@ pub async fn export_pairing_file(
             .into_owned(),
         path: path.to_string_lossy().into_owned(),
     })
+}
+
+/// Runs the work of a command until it is done or the user cancels it. Starting another cancels
+/// the one before.
+pub(crate) async fn until_canceled<T>(
+    cancel_state: &PairingCancelToken,
+    work: impl Future<Output = Result<T, AppError>>,
+) -> Result<T, AppError> {
+    let token = CancellationToken::new();
+    if let Some(old) = cancel_state.lock().unwrap().replace(token.clone()) {
+        old.cancel();
+    }
+
+    let result = tokio::select! {
+        _ = token.cancelled() => Err(AppError::Canceled("Pairing".into())),
+        result = work => result,
+    };
+
+    if !token.is_cancelled() {
+        *cancel_state.lock().unwrap() = None;
+    }
+    result
 }
 
 #[tauri::command]
@@ -129,7 +136,8 @@ pub fn reveal_pairing_file(app: AppHandle, last: State<'_, LastExport>) -> Resul
         .map_err(|e| AppError::Filesystem("Failed to show the pairing file".into(), e.to_string()))
 }
 
-async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> {
+/// Pairs with the device as far as its pairing file needs, and returns the file.
+pub(crate) async fn pairing_file(app: &AppHandle, udid: &str) -> Result<Vec<u8>, AppError> {
     let device = find(&app.state::<Nearby>(), udid).await?;
     // Over Wi-Fi the device drops the connections below unless its calls are being answered.
     app.state::<Heartbeats>().keep(&device).await;

@@ -34,10 +34,10 @@ plist = "1.8.0"
 plist-macro = "0.1.6"
 thiserror = "2.0.18"
 uuid = { version = "1", features = ["v4"] }
+reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "system-proxy", "json"] }
 
-# Fetching Apple's device driver, which only Windows lacks. The tests cover it on any platform.
+# Unpacking Apple's device driver, which only Windows lacks. The tests cover it on any platform.
 [target.'cfg(windows)'.dependencies]
-reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "system-proxy"] }
 cab = "0.6.0"
 
 # Apple's symbols, which only macOS can draw. Tauri builds on the same crates.
@@ -48,7 +48,6 @@ objc2-foundation = { version = "0.3.2", default-features = false, features = ["s
 
 [dev-dependencies]
 base64 = "0.22.1"
-reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "system-proxy"] }
 cab = "0.6.0"
 
 [profile.release]
