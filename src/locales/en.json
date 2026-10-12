@@ -43,6 +43,7 @@
     "failed_export_pairing_file": "Failed to export pairing file"
   },
   "send": {
+    "button": "Send to FlekDeck",
     "uploaded": "Pairing file uploaded",
     "instructions": "Open FlekDeck on the device and tap Refresh to receive it.",
     "save_instead": "Save to Downloads instead"

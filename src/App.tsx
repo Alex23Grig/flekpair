@@ -408,7 +408,7 @@ function App() {
           onClick={() => pair(!canSend)}
         >
           {working && <span className="spinner" aria-hidden="true" />}
-          {t("pairing.export_pairing_file")}
+          {canSend ? t("send.button") : t("pairing.export_pairing_file")}
         </button>
         {canSend && (
           <button

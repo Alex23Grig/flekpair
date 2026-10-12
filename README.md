@@ -6,20 +6,20 @@ One-click pairing file exporter for iPhone and iPad, on macOS and Windows.
 
 ---
 
-Plug in your device, click **Export Pairing File**, and FlekPair uploads the device's pairing file for the FlekDeck app on it to collect. It can save the file to your Downloads folder instead. That is the whole app.
+Plug in your device, click **Send to FlekDeck**, and FlekPair uploads the device's pairing file for the FlekDeck app on it to collect. It can save the file to your Downloads folder instead. That is the whole app.
 
 FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) with everything except pairing-file export removed. It is not affiliated with or endorsed by iloader or its author.
 
 ## How to use
 
 1. Connect your iPhone or iPad with a USB cable and unlock it. The device must have a passcode set.
-2. Open FlekPair and click **Export Pairing File**.
+2. Open FlekPair and click **Send to FlekDeck**.
 3. If the device asks, tap **Trust** and enter your passcode.
 4. When FlekPair says the file was uploaded, open FlekDeck on the device and tap **Refresh**.
 
 The upload goes to FlekStore's server, under the device's UDID, and it is not encrypted. Read [what that means](#what-is-in-the-file) before using it for a device you care about.
 
-A build that was given no server to upload to has no upload: its button saves the file, as below.
+A build that was given no server to upload to has no upload: its button reads **Export Pairing File** and saves the file, as below.
 
 ### Keeping the file on this computer
 
@@ -68,7 +68,7 @@ Exporting also turns on Wi-Fi debugging on the device (`EnableWifiDebugging`), a
 
 **Treat the file like a password.** Whoever holds it can connect to your device from the same network, with the standing of a computer you trusted.
 
-**Export Pairing File** uploads the file as it is to FlekStore's server. The server gives it to anyone who asks for the device's UDID, and a UDID is not a secret. **Save to Downloads instead** keeps the file on this computer; on macOS and Linux it is written readable by your user only.
+**Send to FlekDeck** uploads the file as it is to FlekStore's server. The server gives it to anyone who asks for the device's UDID, and a UDID is not a secret. **Save to Downloads instead** keeps the file on this computer; on macOS and Linux it is written readable by your user only.
 
 ## How FlekDeck collects the file
 
