@@ -8,7 +8,16 @@ One-click pairing file exporter for iPhone and iPad, on macOS and Windows.
 
 Plug in your device, click **Send to FlekDeck**, and FlekPair uploads the device's pairing file for the FlekDeck app on it to collect. It can save the file to your Downloads folder instead. That is the whole app.
 
-FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) with everything except pairing-file export removed. It is not affiliated with or endorsed by iloader or its author.
+FlekPair started as a fork of [iloader](https://github.com/nab138/iloader) with everything except pairing-file export removed. It is not affiliated with or endorsed by iloader or its author.
+
+## Download
+
+| System | Download |
+| --- | --- |
+| macOS, Apple silicon and Intel | [FlekPair-darwin-universal.dmg](https://github.com/Alex23Grig/flekpair/releases/latest/download/FlekPair-darwin-universal.dmg) |
+| Windows, 64-bit | [FlekPair-windows-x64.exe](https://github.com/Alex23Grig/flekpair/releases/latest/download/FlekPair-windows-x64.exe) |
+
+These always fetch the latest version. Earlier ones and what changed in each are on the [releases page](https://github.com/Alex23Grig/flekpair/releases).
 
 ## How to use
 
@@ -18,8 +27,6 @@ FlekPair is an unofficial fork of [iloader](https://github.com/nab138/iloader) w
 4. When FlekPair says the file was uploaded, open FlekDeck on the device and tap **Refresh**.
 
 The upload goes to FlekStore's server, under the device's UDID, and it is not encrypted. Read [what that means](#what-is-in-the-file) before using it for a device you care about.
-
-A build that was given no server to upload to has no upload: its button reads **Export Pairing File** and saves the file, as below.
 
 ### Keeping the file on this computer
 
@@ -70,46 +77,15 @@ Exporting also turns on Wi-Fi debugging on the device (`EnableWifiDebugging`), a
 
 **Send to FlekDeck** uploads the file as it is to FlekStore's server. The server gives it to anyone who asks for the device's UDID, and a UDID is not a secret. **Save to Downloads instead** keeps the file on this computer; on macOS and Linux it is written readable by your user only.
 
-## How FlekDeck collects the file
-
-FlekPair sends `POST <server>/<UDID>` with the pairing file as the body. The server takes nothing but property lists.
-
-`GET` on the same address returns that file, or 404 when there is none. That is all FlekDeck's Refresh has to do.
-
-`<server>` is not written in this repository. It is given to a build in `FLEKPAIR_SERVER`, and FlekDeck has to be given the same one.
-
 ## Troubleshooting
 
 The app lists suggestions next to any error, and **Copy to clipboard** copies the technical message.
 
 For more detail, start FlekPair from a terminal with `FLEKPAIR_LOG=debug` to print the device conversation to stderr. That output includes key material, so don't post it publicly.
 
-## Building from source
+## Source code
 
-1. Install [Node.js](https://nodejs.org) and [Rust](https://www.rust-lang.org/tools/install)
-2. Clone the repository and `cd` into it
-3. Run `npm install`
-
-For development with hot reload: `npm run tauri dev`
-Make a production build: `npm run tauri build`
-
-Where pairing files are uploaded to is compiled in from the `FLEKPAIR_SERVER` environment variable, for example `FLEKPAIR_SERVER=https://files.example.com/pairing-files npm run tauri build`. Without it the build says so in a warning, and the app only saves the file.
-
-To work on the interface without a device, run `npm run dev` and open <http://localhost:1420> in a browser. A stand-in backend takes over there; choose what it simulates with `?mock=device`, `wifi`, `two`, `mixed`, `none`, `unnamed`, `error`, `denied`, `sendfail`, `nosend`, `nousbmuxd` or `stuck`, and the language with `&lng=ru`.
-
-The app icon is generated from `app-icon.svg`: `npm run tauri icon app-icon.svg`.
-
-`cargo test` in `src-tauri` covers unpacking Apple's installer. If the driver setup stops working, `cargo test -- --ignored apples_installer` downloads the real installer and shows whether Apple has changed how it is packaged.
-
-`FLEKPAIR_UDID=<udid> cargo test -- --ignored reaches_a_trusted_device` tries the network search for real. It needs that device to trust the computer and to be awake on the same network.
-
-## Releasing
-
-Every push to `main` and every pull request builds a universal macOS `.dmg` and a Windows installer, downloadable from the workflow run. Publishing a GitHub release attaches them to that release.
-
-Released builds upload to the address in the `PAIRING_SERVER` repository secret, and a release fails to build without it. It is a secret rather than a variable only so that the public build logs don't print it; anyone with the app can still find it.
-
-macOS builds are signed with a Developer ID and notarized when these repository secrets exist: `DEV_ID_P12_BASE64`, `DEV_ID_P12_PASSWORD`, `DEV_IDENTITY_NAME`, `NOTARIZE_APPLE_ID`, `NOTARIZE_APP_SPECIFIC_PASS` and `NOTARIZE_TEAM_ID`. Without them the app is ad-hoc signed.
+This repository now holds FlekPair's releases only; its source is no longer published. Versions up to 1.0.4 were published under the MIT License and remain in this repository's history.
 
 ## Credits
 
@@ -121,6 +97,6 @@ macOS builds are signed with a Developer ID and notarized when these repository 
 
 ## License
 
-The source code of this repository is licensed under the MIT License. See the [LICENSE](/LICENSE) file for the full text.
+FlekPair contains code from iloader, under the MIT License; see the [LICENSE](/LICENSE) file for the full text. That notice applies to the code in this repository's history and to the copies of it inside FlekPair.
 
 The name "iloader" and its logo belong to nab138 and are covered by iloader's own [branding notice](https://github.com/nab138/iloader/blob/main/LICENSE-BRANDING). They are not part of FlekPair, which names iloader only to credit it.
