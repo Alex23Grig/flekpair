@@ -1,10 +1,8 @@
-<img align="left" width="90" height="90" src="/app-icon.svg" alt="">
+<p align="center"><img src="app-icon.svg" width="128" height="128" alt="FlekPair icon"></p>
 
-# FlekPair
+<h1 align="center">FlekPair</h1>
 
-Pairing files for iPhone and iPad, made on your Mac or PC and sent straight to FlekDeck.
-
----
+<p align="center">Pairing files for iPhone and iPad, made on your Mac or PC and sent straight to FlekDeck.</p>
 
 Connect your device, click **Start pairing**, and FlekPair makes the device's pairing file. With Premium Access it goes straight to the FlekDeck app on the device, where a tap on **Refresh** picks it up. You can always save the file on your computer instead.
 
